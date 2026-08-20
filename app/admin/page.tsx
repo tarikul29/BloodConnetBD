@@ -85,8 +85,7 @@ export default function AdminPage() {
 
     setDeleteTarget(null);
   }
-
-  const filteredDonors = donors.filter(
+const filteredDonors = donors.filter(
     (d: any) =>
       d.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.phone?.includes(searchQuery) ||
@@ -95,11 +94,11 @@ export default function AdminPage() {
       d.location?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
- const filteredRequests = requests.filter(
+  const filteredRequests = requests.filter(
     (r: any) =>
-      r.patient_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (r as any).phone?.toString().includes(searchQuery) ||
-      r.blood_group?.toLowerCase().includes(searchQuery.toLowerCase())
+      (r.patient_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(r.phone || '').includes(searchQuery) ||
+      (r.blood_group || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (!isAuthenticated) {

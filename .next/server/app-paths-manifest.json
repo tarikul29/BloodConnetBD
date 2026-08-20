@@ -1,8 +1,7 @@
 {
   "/admin/page": "app/admin/page.js",
-  "/request-blood/page": "app/request-blood/page.js",
   "/requests/page": "app/requests/page.js",
   "/donors/page": "app/donors/page.js",
-  "/login/page": "app/login/page.js",
-  "/register/page": "app/register/page.js"
+  "/register/page": "app/register/page.js",
+  "/request-blood/page": "app/request-blood/page.js"
 }
