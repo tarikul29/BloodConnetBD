@@ -19,7 +19,6 @@ import Header from '@/components/Header';
 import type { Donor, BloodRequest } from '@/types/database';
 
 export default function AdminPage() {
-  // Password protection states
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState(false);
@@ -30,11 +29,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Delete confirmation modal state
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; type: 'donor' | 'request'; name: string } | null>(null);
 
   useEffect(() => {
-    // Check if already authenticated in session
     const authStatus = sessionStorage.getItem('admin_authenticated');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
@@ -47,11 +44,9 @@ export default function AdminPage() {
     }
   }, [isAuthenticated]);
 
-  // Handle Admin Password Submit
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // এখানে আপনার গোপন পাসওয়ার্ড সেট করুন (যেমন: '12345' বা আপনার পছন্দের পাসওয়ার্ড)
-    const ADMIN_PASSWORD = 'Tarikul2007@#'; // আপনি চাইলে এটি পরিবর্তন করে নিতে পারেন
+    const ADMIN_PASSWORD = 'Tarikul2007@#';
 
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
@@ -92,20 +87,21 @@ export default function AdminPage() {
   }
 
   const filteredDonors = donors.filter(
-    (d) =>
+    (d: any) =>
       d.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.phone?.includes(searchQuery) ||
-      d.blood_group?.toLowerCase().includes(searchQuery.toLowerCase())
+      d.blood_group?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.location?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredRequests = requests.filter(
-    (r) =>
+    (r: any) =>
       r.patient_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.phone?.includes(searchQuery) ||
+      r.phone?.toString().includes(searchQuery) ||
       r.blood_group?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // যদি পাসওয়ার্ড দিয়ে লগইন করা না থাকে, তবে পাসওয়ার্ড প্রম্পট স্ক্রিন দেখাবে
   if (!isAuthenticated) {
     return (
       <main className="min-h-screen pt-16 bg-gradient-to-br from-slate-50 via-rose-50/30 to-indigo-50/40 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 text-slate-900 dark:text-slate-100 flex items-center justify-center p-4 transition-colors">
@@ -155,11 +151,9 @@ export default function AdminPage() {
     );
   }
 
-  // পাসওয়ার্ড সঠিক হলে মূল অ্যাডমিন প্যানেল দেখাবে
   return (
     <main className="min-h-screen pt-16 bg-gradient-to-br from-slate-50 via-rose-50/30 to-indigo-50/40 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 text-slate-900 dark:text-slate-100 relative overflow-hidden pb-20 transition-colors">
       
-      {/* Background Decorative Gradient Orbs */}
       <div className="absolute top-10 left-10 w-96 h-96 bg-rose-500/10 dark:bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 right-10 w-[30rem] h-[30rem] bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 left-1/3 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -168,7 +162,6 @@ export default function AdminPage() {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         
-        {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 bg-white/80 dark:bg-white/5 backdrop-blur-2xl p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl dark:shadow-2xl transition-colors">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold">
@@ -184,7 +177,6 @@ export default function AdminPage() {
             </p>
           </div>
 
-          {/* Glowing Stats Cards & Logout Button */}
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-4">
             <div className="flex-1 sm:w-44 bg-gradient-to-br from-rose-500/10 to-orange-500/5 dark:from-rose-500/20 dark:to-orange-500/10 p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 backdrop-blur-md shadow-md dark:shadow-lg relative overflow-hidden group">
               <div className="flex items-center justify-between">
@@ -192,7 +184,6 @@ export default function AdminPage() {
                 <Users className="h-5 w-5 text-rose-600 dark:text-rose-400" />
               </div>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">{donors.length}</p>
-              <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-rose-500/10 dark:bg-rose-500/20 rounded-full blur-lg group-hover:scale-150 transition-transform" />
             </div>
 
             <div className="flex-1 sm:w-44 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 dark:from-indigo-500/20 dark:to-purple-500/10 p-4 rounded-2xl border border-indigo-500/20 dark:border-indigo-500/30 backdrop-blur-md shadow-md dark:shadow-lg relative overflow-hidden group">
@@ -201,7 +192,6 @@ export default function AdminPage() {
                 <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               </div>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">{requests.length}</p>
-              <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-lg group-hover:scale-150 transition-transform" />
             </div>
 
             <button
@@ -217,10 +207,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Controls: Navigation Tabs & Live Search Bar */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-          
-          {/* Neon Styled Tabs */}
           <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-white/10 w-full sm:w-auto shadow-sm dark:shadow-inner transition-colors">
             <button
               onClick={() => setActiveTab('donors')}
@@ -246,7 +233,6 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {/* Search Box */}
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
@@ -254,12 +240,11 @@ export default function AdminPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="নাম, ফোন বা ব্লাড গ্রুপ দিয়ে খুঁজুন..."
-              className="w-full pl-11 pr-4 py-3 text-xs sm:text-sm bg-white/90 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 transition-all backdrop-blur-md shadow-sm dark:shadow-none"
+              className="w-full pl-11 pr-4 py-3 text-xs sm:text-sm bg-white/90 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 transition-all backdrop-blur-md shadow-sm"
             />
           </div>
         </div>
 
-        {/* Dynamic Table Section */}
         <div className="bg-white/80 dark:bg-white/5 backdrop-blur-2xl rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl dark:shadow-2xl overflow-hidden transition-colors">
           {loading ? (
             <div className="text-center py-20">
@@ -267,8 +252,6 @@ export default function AdminPage() {
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">তথ্য লোড করা হচ্ছে...</p>
             </div>
           ) : activeTab === 'donors' ? (
-            
-            /* Donors Table */
             filteredDonors.length === 0 ? (
               <div className="p-16 text-center text-slate-500 dark:text-slate-400 text-sm">কোনো রক্তদাতা পাওয়া যায়নি।</div>
             ) : (
@@ -279,18 +262,18 @@ export default function AdminPage() {
                       <th className="p-4 sm:px-6">রক্তদাতা</th>
                       <th className="p-4 sm:px-6">ব্লাড গ্রুপ</th>
                       <th className="p-4 sm:px-6">ফোন নম্বর</th>
-                      <th className="p-4 sm:px-6">ঠিকানা</th>
+                      <th className="p-4 sm:px-6">ঠিকানা / লোকেশন</th>
                       <th className="p-4 sm:px-6 text-right">অ্যাকশন</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-800 dark:text-slate-200">
-                    {filteredDonors.map((donor) => (
+                    {filteredDonors.map((donor: any) => (
                       <tr key={donor.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                         <td className="p-4 sm:px-6 font-bold text-slate-900 dark:text-white flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-rose-500 to-red-600 text-white font-bold flex items-center justify-center text-xs shadow-md">
-                            {donor.full_name?.charAt(0).toUpperCase()}
+                            {donor.full_name?.charAt(0).toUpperCase() || 'D'}
                           </div>
-                          {donor.full_name}
+                          {donor.full_name || 'নাম পাওয়া যায়নি'}
                         </td>
                         <td className="p-4 sm:px-6">
                           <span className="px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 font-black text-xs inline-block">
@@ -298,7 +281,9 @@ export default function AdminPage() {
                           </span>
                         </td>
                         <td className="p-4 sm:px-6 text-slate-600 dark:text-slate-300 font-mono">{donor.phone}</td>
-                        <td className="p-4 sm:px-6 text-slate-500 dark:text-slate-400">{donor.address || 'N/A'}</td>
+                        <td className="p-4 sm:px-6 text-slate-600 dark:text-slate-300">
+                          {donor.address || donor.location || (donor.latitude && donor.longitude ? `${donor.latitude.toFixed(2)}, ${donor.longitude.toFixed(2)}` : 'N/A')}
+                        </td>
                         <td className="p-4 sm:px-6 text-right">
                           <button
                             onClick={() =>
@@ -317,8 +302,6 @@ export default function AdminPage() {
               </div>
             )
           ) : (
-            
-            /* Requests Table */
             filteredRequests.length === 0 ? (
               <div className="p-16 text-center text-slate-500 dark:text-slate-400 text-sm">কোনো রক্তের রিকোয়েস্ট পাওয়া যায়নি।</div>
             ) : (
@@ -334,7 +317,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-800 dark:text-slate-200">
-                    {filteredRequests.map((req) => (
+                    {filteredRequests.map((req: any) => (
                       <tr key={req.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                         <td className="p-4 sm:px-6 font-bold text-slate-900 dark:text-white flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-xs shadow-md">
@@ -347,8 +330,10 @@ export default function AdminPage() {
                             {req.blood_group}
                           </span>
                         </td>
-                        <td className="p-4 sm:px-6 text-slate-600 dark:text-slate-300 font-mono">{req.phone || 'N/A'}</td>
-                        <td className="p-4 sm:px-6 text-slate-500 dark:text-slate-400">{req.hospital_name || req.address || 'N/A'}</td>
+                        <td className="p-4 sm:px-6 text-slate-600 dark:text-slate-300 font-mono">
+                          {req.phone || 'N/A'}
+                        </td>
+                        <td className="p-4 sm:px-6 text-slate-500 dark:text-slate-400">{req.hospital_name || 'N/A'}</td>
                         <td className="p-4 sm:px-6 text-right">
                           <button
                             onClick={() =>
@@ -374,7 +359,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Modern Glassmorphic Delete Modal */}
       <AnimatePresence>
         {deleteTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-md">
