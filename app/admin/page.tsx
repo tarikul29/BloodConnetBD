@@ -85,13 +85,14 @@ export default function AdminPage() {
 
     setDeleteTarget(null);
   }
-const filteredDonors = donors.filter(
+
+  const filteredDonors = donors.filter(
     (d: any) =>
-      d.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.phone?.includes(searchQuery) ||
-      d.blood_group?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.location?.toLowerCase().includes(searchQuery.toLowerCase())
+      (d.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(d.phone || '').includes(searchQuery) ||
+      (d.blood_group || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (d.address || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (d.location || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredRequests = requests.filter(
