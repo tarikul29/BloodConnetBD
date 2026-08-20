@@ -95,10 +95,10 @@ export default function AdminPage() {
       d.location?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredRequests = requests.filter(
+ const filteredRequests = requests.filter(
     (r: any) =>
       r.patient_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.phone?.toString().includes(searchQuery) ||
+      (r as any).phone?.toString().includes(searchQuery) ||
       r.blood_group?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
