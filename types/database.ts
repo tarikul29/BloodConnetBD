@@ -6,6 +6,7 @@ export interface Donor {
   full_name: string;
   phone: string;
   email: string | null;
+    address: string | null;
   blood_group: BloodGroup;
   latitude: number;
   longitude: number;
