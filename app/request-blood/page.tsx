@@ -58,17 +58,26 @@ export default function RequestBloodPage() {
           const query = `
             [out:json][timeout:25];
             (
-              node["amenity"="hospital"](around:1500,${lat},${lng});
-              way["amenity"="hospital"](around:1500,${lat},${lng});
-              node["amenity"="clinic"](around:1500,${lat},${lng});
+              node["amenity"="hospital"](around:2000,${lat},${lng});
+              way["amenity"="hospital"](around:2000,${lat},${lng});
+              relation["amenity"="hospital"](around:2000,${lat},${lng});
+              node["amenity"="clinic"](around:2000,${lat},${lng});
+              way["amenity"="clinic"](around:2000,${lat},${lng});
             );
             out center;
           `;
 
           const response = await fetch('https://overpass-api.de/api/interpreter', {
             method: 'POST',
-            body: query,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `data=${encodeURIComponent(query)}`,
           });
+
+          if (!response.ok) {
+            throw new Error('Overpass API error');
+          }
 
           const data = await response.json();
 
@@ -78,26 +87,32 @@ export default function RequestBloodPage() {
                 el.tags?.name ||
                 el.tags?.['name:bn'] ||
                 el.tags?.['name:en'] ||
+                el.tags?.['official_name'] ||
                 'অজানা হাসপাতাল';
               const hLat = el.lat || el.center?.lat;
               const hLon = el.lon || el.center?.lon;
               return { name, lat: hLat, lon: hLon };
             })
-            .filter((h: any) => h.lat && h.lon)
-            .slice(0, 8);
+            .filter((h: any) => h.lat && h.lon && h.name !== 'অজানা হাসপাতাল')
+            .slice(0, 10);
 
-          if (hospitals.length > 0) {
-            setNearbyHospitals(hospitals);
+          // একই নামের হাসপাতাল বাদ দেওয়া
+          const uniqueHospitals = hospitals.filter(
+            (h, index, self) => index === self.findIndex((t) => t.name === h.name)
+          );
+
+          if (uniqueHospitals.length > 0) {
+            setNearbyHospitals(uniqueHospitals);
             setShowHospitalSuggestions(true);
           } else {
             setError('কাছাকাছি কোনো হাসপাতাল পাওয়া যায়নি। হাসপাতালের নাম ম্যানুয়ালি লিখুন।');
           }
         } catch (err) {
-          console.error(err);
+          console.error('Overpass error:', err);
           setError('হাসপাতাল খুঁজতে সমস্যা হয়েছে। হাসপাতালের নাম ম্যানুয়ালি লিখুন।');
+        } finally {
+          setLocating(false);
         }
-
-        setLocating(false);
       },
       () => {
         setError('লোকেশন পাওয়া যায়নি। লোকেশন অ্যাক্সেসের অনুমতি দিন।');
