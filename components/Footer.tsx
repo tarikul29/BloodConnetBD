@@ -69,7 +69,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-red-600 dark:text-red-500 shrink-0" />
-                <span>ঢাকা, বাংলাদেশ</span>
+                <span>kishoreganj, bangladesh </span>
               </li>
             </ul>
           </div>
