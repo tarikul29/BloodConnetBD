@@ -1,8 +1,1 @@
-{
-  "/requests/page": "app/requests/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/donors/page": "app/donors/page.js",
-  "/request-blood/page": "app/request-blood/page.js",
-  "/page": "app/page.js",
-  "/register/page": "app/register/page.js"
-}
+{}

@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const nearby = findNearbyDonors<Donor>(donors ?? [], { latitude, longitude }, radiusKm)
-    .filter(({ donor }) => checkDonorEligibility(donor.last_donation_date).isEligible);
+  const nearby = findNearbyDonors(donors ?? [] as any, { latitude, longitude }, radiusKm)
+    .filter(({ donor }) => checkDonorEligibility((donor as Donor).last_donation_date).isEligible);
 
   return NextResponse.json({ matches: nearby });
 }
