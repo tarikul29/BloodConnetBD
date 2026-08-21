@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { findNearbyDonors } from '@/lib/geo';
 import { checkDonorEligibility } from '@/lib/eligibility';
-import type { Donor } from '@/types/database';
 
 export async function POST(req: NextRequest) {
   const { latitude, longitude, blood_group, radiusKm = 5 } = await req.json();
@@ -26,8 +25,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const nearby = findNearbyDonors(donors ?? [] as any, { latitude, longitude }, radiusKm)
-    .filter(({ donor }) => checkDonorEligibility((donor as Donor).last_donation_date).isEligible);
+  const donorList: any[] = donors ?? [];
+
+  const nearby = findNearbyDonors(donorList, { latitude, longitude }, radiusKm)
+    .filter((entry: any) => checkDonorEligibility(entry.donor.last_donation_date).isEligible);
 
   return NextResponse.json({ matches: nearby });
 }
