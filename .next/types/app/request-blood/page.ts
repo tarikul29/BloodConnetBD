@@ -1,8 +1,8 @@
-// File: E:\Project 2\bloodconnect-bd\app\register\page.tsx
-import * as entry from '../../../../app/register/page.js'
+// File: E:\Project 2\bloodconnect-bd\app\request-blood\page.tsx
+import * as entry from '../../../../app/request-blood/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
-type TEntry = typeof import('../../../../app/register/page.js')
+type TEntry = typeof import('../../../../app/request-blood/page.js')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{

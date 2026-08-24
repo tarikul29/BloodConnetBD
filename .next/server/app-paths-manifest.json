@@ -1,4 +1,5 @@
 {
-  "/register/page": "app/register/page.js",
-  "/page": "app/page.js"
+  "/api/nearby-hospitals/route": "app/api/nearby-hospitals/route.js",
+  "/page": "app/page.js",
+  "/request-blood/page": "app/request-blood/page.js"
 }

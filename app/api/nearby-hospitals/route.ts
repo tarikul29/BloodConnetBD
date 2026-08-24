@@ -9,38 +9,59 @@ export async function POST(req: NextRequest) {
     }
 
     const query = `
-      [out:json][timeout:25];
-      (
-        node["amenity"="hospital"](around:2500,${lat},${lng});
-        way["amenity"="hospital"](around:2500,${lat},${lng});
-        relation["amenity"="hospital"](around:2500,${lat},${lng});
-        node["amenity"="clinic"](around:2500,${lat},${lng});
-        way["amenity"="clinic"](around:2500,${lat},${lng});
-      );
-      out center;
-    `;
+[out:json][timeout:25];
+(
+  node["amenity"="hospital"](around:3000,${lat},${lng});
+  way["amenity"="hospital"](around:3000,${lat},${lng});
+  relation["amenity"="hospital"](around:3000,${lat},${lng});
+  node["amenity"="clinic"](around:3000,${lat},${lng});
+  way["amenity"="clinic"](around:3000,${lat},${lng});
+);
+out center;
+`;
 
-    const response = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `data=${encodeURIComponent(query)}`,
-    });
+    const endpoints = [
+      'https://overpass-api.de/api/interpreter',
+      'https://lz4.overpass-api.de/api/interpreter',
+    ];
 
-    if (!response.ok) {
-      throw new Error('Overpass API failed');
+    let data = null;
+
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'BloodConnectBD/1.0 (https://blood-connet-bd.vercel.app)',
+          },
+          body: `data=${encodeURIComponent(query)}`,
+        });
+
+        if (!response.ok) {
+          console.error(`Overpass ${endpoint} status:`, response.status);
+          continue;
+        }
+
+        data = await response.json();
+        break;
+      } catch (err) {
+        console.error(`Failed with ${endpoint}:`, err);
+        continue;
+      }
     }
 
-    const data = await response.json();
+    if (!data) {
+      return NextResponse.json({ error: 'Failed to fetch hospitals' }, { status: 500 });
+    }
 
-    const hospitals = data.elements
+    const hospitals = (data.elements || [])
       .map((el: any) => {
         const name =
           el.tags?.name ||
           el.tags?.['name:bn'] ||
           el.tags?.['name:en'] ||
-          el.tags?.['official_name'] ||
+          el.tags?.official_name ||
           null;
 
         const hLat = el.lat || el.center?.lat;
@@ -48,19 +69,23 @@ export async function POST(req: NextRequest) {
 
         if (!name || !hLat || !hLon) return null;
 
-        return { name, lat: hLat, lon: hLon };
+        return {
+          name: String(name).trim(),
+          lat: hLat,
+          lon: hLon,
+        };
       })
       .filter(Boolean);
 
-    // ডুপ্লিকেট বাদ দেওয়া
+    // ডুপ্লিকেট বাদ
     const unique = hospitals.filter(
       (h: any, index: number, self: any[]) =>
         index === self.findIndex((t) => t.name === h.name)
     );
 
-    return NextResponse.json(unique.slice(0, 12));
+    return NextResponse.json(unique.slice(0, 15));
   } catch (error) {
     console.error('Nearby hospitals error:', error);
-    return NextResponse.json({ error: 'Failed to fetch hospitals' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
