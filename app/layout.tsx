@@ -1,5 +1,6 @@
 import './globals.css';
 import { ThemeProvider } from 'next-themes';
+import RealtimeNotification from '@/components/RealtimeNotification';
 
 export const metadata = {
   title: 'BloodConnect BD',
@@ -12,10 +13,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="bn" suppressHydrationWarning>
       <body className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
+          <RealtimeNotification />
         </ThemeProvider>
       </body>
     </html>
