@@ -31,11 +31,22 @@ export default function AdminPage() {
   
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; type: 'donor' | 'request'; name: string } | null>(null);
 
-  useEffect(() => {
-    const authStatus = sessionStorage.getItem('admin_authenticated');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
+     useEffect(() => {
+    async function checkSession() {
+      const savedKey = sessionStorage.getItem('admin_key');
+      if (!savedKey) return;
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: savedKey, action: 'verify' }),
+      });
+      if (res.ok) {
+        setIsAuthenticated(true);
+      } else {
+        sessionStorage.removeItem('admin_key');
+      }
     }
+    checkSession();
   }, []);
 
   useEffect(() => {
@@ -71,15 +82,28 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handleDelete() {
+    async function handleDelete() {
     if (!deleteTarget) return;
 
-    const supabase = createClient();
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        password: sessionStorage.getItem('admin_key'),
+        action: deleteTarget.type === 'donor' ? 'delete-donor' : 'delete-request',
+        id: deleteTarget.id,
+      }),
+    });
+
+    if (!res.ok) {
+      alert('মুছে ফেলা যায়নি। আবার লগইন করে চেষ্টা করুন।');
+      setDeleteTarget(null);
+      return;
+    }
+
     if (deleteTarget.type === 'donor') {
-      await supabase.from('donors').delete().eq('id', deleteTarget.id);
       setDonors((prev) => prev.filter((d) => d.id !== deleteTarget.id));
     } else {
-      await supabase.from('blood_requests').delete().eq('id', deleteTarget.id);
       setRequests((prev) => prev.filter((r) => r.id !== deleteTarget.id));
     }
 
@@ -98,7 +122,7 @@ export default function AdminPage() {
   const filteredRequests = requests.filter(
     (r: any) =>
       (r.patient_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(r.phone || '').includes(searchQuery) ||
+          String(r.contact_phone || '').includes(searchQuery) ||
       (r.blood_group || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -197,7 +221,7 @@ export default function AdminPage() {
             <button
               onClick={() => {
                 setIsAuthenticated(false);
-                sessionStorage.removeItem('admin_authenticated');
+                sessionStorage.removeItem('admin_key');
               }}
               className="px-4 py-3 rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-xs font-bold transition-all shadow-sm"
               title="লগআউট করুন"
@@ -331,7 +355,7 @@ export default function AdminPage() {
                           </span>
                         </td>
                         <td className="p-4 sm:px-6 text-slate-600 dark:text-slate-300 font-mono">
-                          {req.phone || 'N/A'}
+                             {req.contact_phone || 'N/A'}
                         </td>
                         <td className="p-4 sm:px-6 text-slate-500 dark:text-slate-400">{req.hospital_name || 'N/A'}</td>
                         <td className="p-4 sm:px-6 text-right">
