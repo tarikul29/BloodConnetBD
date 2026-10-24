@@ -55,13 +55,17 @@ export default function AdminPage() {
     }
   }, [isAuthenticated]);
 
-  const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ADMIN_PASSWORD = 'Tarikul2007@#';
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password, action: 'verify' }),
+    });
 
-    if (password === ADMIN_PASSWORD) {
+    if (res.ok) {
+      sessionStorage.setItem('admin_key', password);
       setIsAuthenticated(true);
-      sessionStorage.setItem('admin_authenticated', 'true');
       setPasswordError(false);
     } else {
       setPasswordError(true);

@@ -2065,8 +2065,8 @@ video {
 .\[out\:json\] {
   out: json;
 }
-.\[timeout\:25\] {
-  timeout: 25;
+.\[timeout\:10\] {
+  timeout: 10;
 }
 .placeholder\:text-slate-400::-moz-placeholder {
   --tw-text-opacity: 1;
