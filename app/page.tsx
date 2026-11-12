@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import RequestModal from '@/components/RequestModal';
 import Footer from '@/components/Footer';
-import { Ticker, HowItWorks, PhotoFeature, Eligibility, FinalCTA } from '@/components/HomeSections';
+import { Ticker, HowItWorks, WhyUs, LiveRequests, PhotoFeature, Compatibility, Eligibility, BloodHeroes, AppInstall, Faq, FinalCTA } from '@/components/HomeSections';
 
 export default function HomePage() {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -18,8 +18,14 @@ export default function HomePage() {
         <Hero onEmergencyClick={() => setModalOpen(true)} />
         <Ticker />
         <HowItWorks />
+        <WhyUs />
+        <LiveRequests />
         <PhotoFeature />
+        <Compatibility />
         <Eligibility />
+        <BloodHeroes />
+        <AppInstall />
+        <Faq />
         <FinalCTA />
         <RequestModal
           isOpen={isModalOpen}
