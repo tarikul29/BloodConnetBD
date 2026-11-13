@@ -71,7 +71,7 @@ export default function DashboardPage() {
       }
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('donors')
       .update({
         full_name: donor.full_name,
@@ -81,11 +81,12 @@ export default function DashboardPage() {
         is_available: donor.is_available,
         photo_url,
       })
-      .eq('id', donor.id);
+      .eq('id', donor.id)
+      .select('id');
 
     setSaving(false);
 
-    if (error) {
+    if (error || !data || data.length === 0) {
       setMessage('সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।');
       return;
     }
@@ -93,6 +94,33 @@ export default function DashboardPage() {
     setDonor({ ...donor, photo_url });
     setPhotoFile(null);
     setMessage('সফলভাবে সংরক্ষণ হয়েছে!');
+  }
+
+  async function handleToggleAvailable() {
+    if (!donor) return;
+    const next = !donor.is_available;
+    const previous = donor;
+    setDonor({ ...donor, is_available: next });
+    setMessage(null);
+
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('donors')
+      .update({ is_available: next })
+      .eq('id', donor.id)
+      .select('id');
+
+    if (error || !data || data.length === 0) {
+      setDonor(previous);
+      setMessage('উপলব্ধতা বদলানো যায়নি। আবার চেষ্টা করুন।');
+      return;
+    }
+
+    if (!next) {
+      await supabase.from('donor_live_locations').delete().eq('donor_id', donor.id);
+    }
+    window.dispatchEvent(new Event('donor-availability-changed'));
+    setMessage(next ? 'সফলভাবে চালু হয়েছে। এখন আপনি তালিকায় "রক্ত দিতে প্রস্তুত" দেখাবেন।' : 'সফলভাবে বন্ধ হয়েছে। এখন আপনি "অনুপলব্ধ" দেখাবেন।');
   }
 
   async function handleLogout() {
@@ -220,11 +248,11 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-3 bg-slate-50/50 dark:bg-slate-800/30">
             <div>
               <p className="text-sm font-semibold text-slate-900 dark:text-white">রক্তদানে উপলব্ধ</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">বন্ধ রাখলে আপনাকে তালিকায় "অনুপলব্ধ" দেখাবে</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">চালু থাকলে আপনার ফোনের বর্তমান লোকেশন থেকে দূরত্ব দেখানো হবে। বন্ধ রাখলে তালিকায় "অনুপলব্ধ" দেখাবে ও লোকেশন শেয়ার বন্ধ হবে</p>
             </div>
             <button
               type="button"
-              onClick={() => setDonor({ ...donor, is_available: !donor.is_available })}
+              onClick={handleToggleAvailable}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                 donor.is_available ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
               }`}

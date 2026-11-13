@@ -14,6 +14,7 @@ import {
 import type { User } from '@supabase/supabase-js';
 import ThemeToggle from './ThemeToggle';
 import Logo from './Logo';
+import LiveLocationTracker from './LiveLocationTracker';
 import { createClient } from '@/lib/supabase/client';
 
 const NAV_LINKS = [
@@ -114,6 +115,7 @@ export default function Header() {
           : 'bg-gradient-to-r from-white/85 via-rose-50/80 to-amber-50/80 dark:from-slate-900/85 dark:via-slate-900/85 dark:to-slate-900/85 border-transparent'
       }`}
     >
+      <LiveLocationTracker userId={user?.id ?? null} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className={`flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-14' : 'h-16'}`}>
           {/* লোগো */}

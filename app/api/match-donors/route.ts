@@ -25,7 +25,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const donorList: any[] = donors ?? [];
+  // ডোনারের লাইভ লোকেশন থাকলে সেটাই ব্যবহার হবে, না থাকলে রেজিস্ট্রেশনের লোকেশন
+  const { data: liveRows } = await supabase
+    .from('donor_live_locations')
+    .select('donor_id, latitude, longitude');
+  const liveMap = new Map<string, { latitude: number; longitude: number }>(
+    (liveRows ?? []).map((r: any) => [r.donor_id, { latitude: r.latitude, longitude: r.longitude }])
+  );
+
+  const donorList: any[] = (donors ?? []).map((d: any) => {
+    const live = liveMap.get(d.id);
+    return live ? { ...d, latitude: live.latitude, longitude: live.longitude } : d;
+  });
 
   const nearby = findNearbyDonors(donorList, { latitude, longitude }, radiusKm)
     .filter((entry: any) => checkDonorEligibility(entry.donor.last_donation_date).isEligible);
