@@ -68,6 +68,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing id' }, { status: 400 });
   }
 
+  if (action === 'set-donor-available') {
+    if (typeof body.available !== 'boolean') {
+      return NextResponse.json({ error: 'Invalid value' }, { status: 400 });
+    }
+    const { error } = await supabase.from('donors').update({ is_available: body.available }).eq('id', id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === 'set-request-status') {
+    const allowed = ['critical', 'urgent', 'moderate', 'fulfilled', 'expired'];
+    if (typeof body.status !== 'string' || !allowed.includes(body.status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    }
+    const { error } = await supabase.from('blood_requests').update({ urgency_status: body.status }).eq('id', id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
   if (action === 'delete-donor') {
     // লগইন একাউন্টটাও মুছে দিচ্ছি, নইলে একই ইমেইলে আবার রেজিস্টার করা যাবে না
     await supabase.auth.admin.deleteUser(id);
