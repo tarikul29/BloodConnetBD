@@ -87,25 +87,36 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4">
-      <div className="w-full sm:max-w-lg bg-white dark:bg-slate-900 border border-transparent dark:border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 z-10">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-rose-50 dark:bg-rose-950/50 rounded-xl text-red-600 dark:text-red-400">
-              <Droplet className="h-5 w-5" fill="currentColor" />
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="relative max-h-[92vh] w-full overflow-y-auto rounded-t-[2rem] border border-orange-100 bg-gradient-to-b from-white to-rose-50/70 shadow-2xl dark:border-slate-800 dark:from-slate-900 dark:to-slate-900 sm:max-w-lg sm:rounded-[2rem]">
+        {/* রঙিন মাথা */}
+        <div className="sticky top-0 z-10 overflow-hidden bg-gradient-to-r from-red-900 via-red-600 to-orange-500 px-6 py-5">
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: 'radial-gradient(circle at 12px 12px,#fff 2px,transparent 3px)', backgroundSize: '36px 36px' }}
+          />
+          <div className="relative flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-red-600 shadow-lg">
+                <Droplet className="h-5 w-5" fill="currentColor" />
+              </div>
+              <div>
+                <h2 className="text-lg font-extrabold text-white">Emergency Blood Request</h2>
+                <p className="text-xs text-red-100">Nearby donors will see it right away</p>
+              </div>
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Emergency Blood Request</h2>
+            <button
+              onClick={onClose}
+              className="rounded-full bg-white/20 p-2 text-white transition-colors hover:bg-white/35"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button 
-            onClick={onClose} 
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          <Field label="Patient Name" icon={<User className="h-4 w-4" />}>
+        <form onSubmit={handleSubmit} className="space-y-4 px-6 py-6">
+          <Field label="Patient Name" icon={<User className="h-4 w-4 text-red-600" />}>
             <input
               required
               value={form.patient_name}
@@ -115,7 +126,7 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
             />
           </Field>
 
-          <Field label="Hospital Name" icon={<Building2 className="h-4 w-4" />}>
+          <Field label="Hospital Name" icon={<Building2 className="h-4 w-4 text-red-600" />}>
             <input
               required
               value={form.hospital_name}
@@ -125,7 +136,7 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 rounded-3xl border border-amber-200/80 bg-gradient-to-br from-amber-50 to-orange-100 p-4 dark:border-amber-900/40 dark:from-amber-950/30 dark:to-slate-800">
             <Field label="Blood Group">
               <select
                 value={form.blood_group}
@@ -150,7 +161,7 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
             </Field>
           </div>
 
-          <Field label="Contact Phone" icon={<Phone className="h-4 w-4" />}>
+          <Field label="Contact Phone" icon={<Phone className="h-4 w-4 text-red-600" />}>
             <input
               required
               value={form.contact_phone}
@@ -160,20 +171,24 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
             />
           </Field>
 
-          <Field label="Hospital Location" icon={<MapPin className="h-4 w-4" />}>
-            <button
-              type="button"
-              onClick={handleUseLocation}
-              disabled={locating}
-              className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-60 transition-colors"
-            >
-              <MapPin className="h-4 w-4 text-red-500" />
-              {locating ? 'Fetching location...' : coords ? 'Location captured ✓' : 'Use current location'}
-            </button>
-          </Field>
+          <div className="rounded-3xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-teal-100 p-4 dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-slate-800">
+            <Field label="Hospital Location" icon={<MapPin className="h-4 w-4 text-emerald-700" />}>
+              <button
+                type="button"
+                onClick={handleUseLocation}
+                disabled={locating}
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-extrabold text-white shadow-lg transition-transform hover:-translate-y-0.5 disabled:opacity-60 ${
+                  coords ? 'bg-gradient-to-r from-emerald-500 to-teal-700' : 'bg-gradient-to-r from-teal-600 to-emerald-900'
+                }`}
+              >
+                <MapPin className="h-4 w-4" />
+                {locating ? 'Fetching location...' : coords ? 'Location captured ✓' : 'Use current location'}
+              </button>
+            </Field>
+          </div>
 
           {error && (
-            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/50 rounded-xl px-3 py-2">
+            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/50 dark:text-red-400">
               {error}
             </p>
           )}
@@ -181,7 +196,7 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-full bg-red-600 py-3.5 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60 transition-colors shadow-lg shadow-red-500/20"
+            className="w-full rounded-2xl bg-gradient-to-r from-red-500 via-red-600 to-red-800 py-4 text-base font-extrabold text-white shadow-lg shadow-red-300/50 transition-transform hover:-translate-y-0.5 disabled:opacity-60 dark:shadow-none"
           >
             {submitting ? 'Submitting...' : 'Submit Emergency Request'}
           </button>
@@ -191,27 +206,24 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
       <style jsx global>{`
         .input {
           width: 100%;
-          border-radius: 0.75rem;
-          border: 1px solid rgb(226 232 240);
-          background-color: rgb(248 250 252 / 0.5);
-          padding: 0.625rem 0.75rem;
-          font-size: 0.875rem;
+          border-radius: 1rem;
+          border: 1.5px solid rgb(255 237 213);
+          background: linear-gradient(180deg, #fff, rgb(255 247 237 / 0.6));
+          padding: 0.75rem 1rem;
+          font-size: 0.95rem;
+          font-weight: 500;
           color: rgb(15 23 42);
           transition: all 0.2s;
         }
         .dark .input {
           border-color: rgb(51 65 85);
-          background-color: rgb(30 41 59 / 0.5);
+          background: rgb(30 41 59);
           color: white;
         }
         .input:focus {
           outline: none;
           border-color: rgb(220 38 38);
-          box-shadow: 0 0 0 3px rgb(254 226 226);
-        }
-        .dark .input:focus {
-          border-color: rgb(239 68 68);
-          box-shadow: 0 0 0 3px rgb(127 29 29 / 0.5);
+          box-shadow: 0 0 0 4px rgb(220 38 38 / 0.15);
         }
       `}</style>
     </div>
@@ -229,7 +241,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+      <label className="flex items-center gap-1.5 text-[13px] font-bold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
         {icon}
         {label}
       </label>

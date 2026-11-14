@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
-import { Droplet, User, Phone, Mail, MapPin, Image as ImageIcon, CheckCircle2, Lock, ArrowRight, Building, Compass } from 'lucide-react';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { User, Phone, Mail, MapPin, Camera, Lock, Building, CalendarDays, Droplet } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import Header from '@/components/Header';
+import { AuthShell, Field, FormError, FormHeading, Section, SubmitButton, SuccessScreen, inputCls, selectCls } from '@/components/FormUI';
 import type { BloodGroup } from '@/types/database';
 
 const BLOOD_GROUPS: BloodGroup[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -254,14 +254,6 @@ export default function DonorRegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const iconControls = useAnimationControls();
-
-  useEffect(() => {
-    iconControls.start({
-      scale: [1, 1.08, 1],
-      transition: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
-    });
-  }, [iconControls]);
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -381,340 +373,282 @@ export default function DonorRegisterPage() {
     setSuccess(true);
   }
 
-  // ==================== SUCCESS SCREEN / POPUP ====================
+  // ==================== SUCCESS SCREEN ====================
   if (success) {
     return (
-      <main className="min-h-screen relative overflow-hidden bg-white dark:bg-slate-950 transition-colors">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-50/90 via-white to-rose-50/70 dark:from-red-950/20 dark:via-slate-950 dark:to-slate-950" />
-        <Header />
-
-        <div className="relative z-10 flex items-center justify-center min-h-[85vh] px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 60, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 100, damping: 18 }}
-            className="w-full max-w-md"
-          >
-            <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/80 dark:border-slate-800 rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(220,38,38,0.15)] p-10 sm:p-12 text-center">
-              <motion.div
-                initial={{ scale: 0, rotate: -90 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.2, type: 'spring', stiffness: 160, damping: 12 }}
-                className="mx-auto mb-7 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-xl shadow-green-200 dark:shadow-none"
-              >
-                <CheckCircle2 className="h-12 w-12 text-white" strokeWidth={2.5} />
-              </motion.div>
-
-              <h1 className="text-2xl sm:text-[1.7rem] font-bold text-slate-900 dark:text-white">
-                রেজিস্ট্রেশন সম্পন্ন!
-              </h1>
-              <p className="mt-3 text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed">
-                ধন্যবাদ! আপনি সফলভাবে রক্তদাতা হিসেবে নিবন্ধিত হয়েছেন।
-              </p>
-
-              <div className="mt-8 flex flex-col gap-3">
-                <a
-                  href="/login"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-red-200 dark:shadow-none hover:shadow-2xl transition-all"
-                >
-                  লগইন করুন
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-                <a
-                  href="/donors"
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 px-6 py-3 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-                >
-                  ডোনার তালিকা দেখুন
-                </a>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </main>
+      <SuccessScreen
+        title="রেজিস্ট্রেশন সম্পন্ন!"
+        text="ধন্যবাদ! আপনি সফলভাবে রক্তদাতা হিসেবে নিবন্ধিত হয়েছেন।"
+        actions={[
+          { href: '/login', label: 'লগইন করুন', primary: true },
+          { href: '/donors', label: 'ডোনার তালিকা দেখুন' },
+        ]}
+      />
     );
   }
 
   // ==================== MAIN FORM ====================
   return (
-    <main className="min-h-screen pt-16 relative overflow-hidden bg-white dark:bg-slate-950 transition-colors">
-      <div className="absolute inset-0 bg-gradient-to-br from-red-50/90 via-white to-rose-50/70 dark:from-red-950/20 dark:via-slate-950 dark:to-slate-950" />
-      <Header />
+    <AuthShell
+      badge="এক মিনিটেই রেজিস্ট্রেশন"
+      title="আপনার রক্ত"
+      accent="কারও নতুন জীবন"
+      subtitle="ডোনার হিসেবে যুক্ত হোন। জরুরি মুহূর্তে কাছের কেউ আপনাকে সরাসরি কল করবেন।"
+      perks={[
+        'সম্পূর্ণ বিনামূল্যে, কোনো খরচ নেই',
+        'ডোনার তালিকায় আপনার নাম ও গ্রুপ দেখা যাবে',
+        'রক্ত দিতে না পারলে নিজেকে "বিরতিতে" রাখতে পারবেন',
+      ]}
+      footerNote="আপনার ফোন নম্বর তালিকায় লুকানো থাকে, কেউ কল করুন চাপলে তবেই দেখা যায়।"
+    >
+      <FormHeading
+        pill="৩টি সহজ ধাপ · মাত্র ১ মিনিট"
+        title="ডোনার হিসেবে"
+        accent="যুক্ত হোন"
+        subtitle="সব তথ্য সঠিক দিন, যাতে দরকারে সবাই আপনাকে খুঁজে পায়।"
+        badges={['১ ব্যাগ = ৩ জীবন', 'বিনামূল্যে']}
+      />
 
-      <div className="relative z-10 mx-auto max-w-lg px-4 py-10 sm:py-14">
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 90, damping: 18 }}
+      {/* অনুপ্রেরণার লেখা */}
+      <div className="relative mb-6 flex items-center gap-4 overflow-hidden rounded-3xl bg-gradient-to-r from-red-900 via-red-600 to-orange-500 px-5 py-4 text-white">
+        <span className="text-4xl leading-none">❝</span>
+        <span className="text-[15px] font-medium leading-relaxed sm:text-base">
+          আপনার সামান্য সময়ে কেউ ফিরে পেতে পারে তার পুরো জীবন। আজই প্রথম পদক্ষেপ নিন।
+        </span>
+      </div>
+
+      {/* ধাপ নির্দেশক */}
+      <div className="mb-6 grid grid-cols-3 gap-3">
+        {[
+          { t: '১ · ব্যক্তিগত', g: 'from-red-500 to-red-800', c: 'text-red-700 dark:text-red-400' },
+          { t: '২ · ঠিকানা', g: 'from-yellow-300 to-amber-500', c: 'text-amber-700 dark:text-amber-400' },
+          { t: '৩ · রক্ত ও লোকেশন', g: 'from-emerald-400 to-teal-700', c: 'text-teal-700 dark:text-teal-400' },
+        ].map((s) => (
+          <div key={s.t} className="flex flex-col gap-1.5">
+            <div className={`h-2 rounded-full bg-gradient-to-r ${s.g}`} />
+            <span className={`text-[13px] font-bold ${s.c}`}>{s.t}</span>
+          </div>
+        ))}
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ছবি */}
+        <div className="flex items-center gap-5">
+          <label htmlFor="photo" className="group cursor-pointer">
+            <motion.div whileHover={{ scale: 1.05 }} className="relative h-24 w-24">
+              <motion.span
+                aria-hidden
+                animate={{ rotate: 360 }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 rounded-full"
+                style={{ background: 'conic-gradient(#c4162a,#f2a516,#2fa886,#c4162a)' }}
+              />
+              <span className="absolute inset-[4px] flex items-center justify-center overflow-hidden rounded-full bg-white dark:bg-slate-800">
+                {photoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photoPreview} alt="preview" className="h-full w-full object-cover" />
+                ) : (
+                  <Camera className="h-8 w-8 text-red-600" />
+                )}
+              </span>
+            </motion.div>
+          </label>
+          <input id="photo" type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+          <div className="flex flex-col gap-1">
+            <span className="text-lg font-extrabold text-slate-900 dark:text-white">আপনার ছবি দিন</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">ঐচ্ছিক, তবে ছবি থাকলে মানুষ বেশি ভরসা করে</span>
+          </div>
+        </div>
+
+        {/* ব্যক্তিগত তথ্য */}
+        <Section
+          tone="red"
+          title="ব্যক্তিগত তথ্য"
+          step="ধাপ ১"
+          note='আপনার ফোন নম্বর ডোনার তালিকায় লুকানো থাকে, কেউ "কল করুন" চাপলে তবেই দেখা যায়।'
         >
-          <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/80 dark:border-slate-800 rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(220,38,38,0.12)] p-8 sm:p-10 overflow-hidden">
-            
-            {/* Header */}
-            <div className="text-center mb-8">
-              <motion.div
-                animate={iconControls}
-                className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 shadow-xl shadow-red-300/50 dark:shadow-none"
-              >
-                <Droplet className="h-8 w-8 text-white" fill="currentColor" />
-              </motion.div>
+          <Field label="পূর্ণ নাম" icon={User}>
+            <input
+              required
+              value={form.full_name}
+              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              placeholder="যেমন: আব্দুল করিম"
+              className={inputCls}
+            />
+          </Field>
+          <Field label="ফোন নম্বর" icon={Phone}>
+            <input
+              required
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="01XXXXXXXXX"
+              className={inputCls}
+            />
+          </Field>
+          <Field label="ইমেইল" icon={Mail}>
+            <input
+              required
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="example@gmail.com"
+              className={inputCls}
+            />
+          </Field>
+          <Field label="পাসওয়ার্ড" icon={Lock}>
+            <input
+              required
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="অন্তত ৬ অক্ষর"
+              className={inputCls}
+            />
+          </Field>
+        </Section>
 
-              <h1 className="text-2xl sm:text-[1.75rem] font-bold text-slate-900 dark:text-white tracking-tight">
-                ডোনার রেজিস্ট্রেশন
-              </h1>
-              <p className="mt-2 text-slate-500 dark:text-slate-400 text-sm">
-                আপনার তথ্য দিন, প্রয়োজনে মানুষ আপনার সাথে যোগাযোগ করবে
-              </p>
+        {/* ঠিকানা */}
+        <Section tone="gold" title="আপনার ঠিকানা" step="ধাপ ২" note="সঠিক এলাকা দিলে আপনার কাছের মানুষ আপনাকে আগে খুঁজে পাবেন।">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className="mb-1.5 ml-1 block text-[13px] font-bold text-slate-700 dark:text-slate-300">বিভাগ</label>
+              <select
+                value={division}
+                onChange={(e) => {
+                  setDivision(e.target.value);
+                  setDistrict('');
+                  setUpazila('');
+                }}
+                className={selectCls}
+              >
+                <option value="">বিভাগ সিলেক্ট করুন</option>
+                {Object.keys(BD_LOCATIONS).map((div) => (
+                  <option key={div} value={div}>{div}</option>
+                ))}
+              </select>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Photo Upload */}
-              <div className="flex flex-col items-center gap-2">
-                <label htmlFor="photo" className="cursor-pointer group">
-                  <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 group-hover:border-red-400 transition-colors">
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="preview" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex flex-col items-center gap-1">
-                        <ImageIcon className="h-7 w-7 text-slate-400 dark:text-slate-500" />
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500">ছবি</span>
-                      </div>
-                    )}
-                  </div>
-                </label>
-                <input id="photo" type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
-                <span className="text-xs text-slate-500 dark:text-slate-400">প্রোফাইল ছবি (ঐচ্ছিক)</span>
-              </div>
-
-              {/* Full Name */}
-              <div>
-                <label className="block text-[13px] font-semibold text-slate-600 dark:text-slate-300 mb-1.5 ml-1">পূর্ণ নাম</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <User className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                  </div>
-                  <input
-                    required
-                    value={form.full_name}
-                    onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                    placeholder="যেমন: আব্দুল করিম"
-                    className="w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-800/90 pl-11 pr-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500 transition-all shadow-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label className="block text-[13px] font-semibold text-slate-600 dark:text-slate-300 mb-1.5 ml-1">ফোন নম্বর</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Phone className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                  </div>
-                  <input
-                    required
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="01XXXXXXXXX"
-                    className="w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-800/90 pl-11 pr-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500 transition-all shadow-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-[13px] font-semibold text-slate-600 dark:text-slate-300 mb-1.5 ml-1">ইমেইল</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                  </div>
-                  <input
-                    required
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    placeholder="example@gmail.com"
-                    className="w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-800/90 pl-11 pr-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500 transition-all shadow-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-[13px] font-semibold text-slate-600 dark:text-slate-300 mb-1.5 ml-1">পাসওয়ার্ড</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                  </div>
-                  <input
-                    required
-                    type="password"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    placeholder="অন্তত ৬ অক্ষর"
-                    className="w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-800/90 pl-11 pr-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500 transition-all shadow-sm"
-                  />
-                </div>
-              </div>
-
-              {/* ঠিকানা ড্রপডাউনসমূহ */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-4">
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Compass className="h-4 w-4 text-red-500" /> বর্তমান ঠিকানা নির্বাচন করুন
-                </p>
-
-                <div>
-                  <label className="block text-[12px] font-medium text-slate-600 dark:text-slate-400 mb-1">বিভাগ</label>
-                  <select
-                    value={division}
-                    onChange={(e) => {
-                      setDivision(e.target.value);
-                      setDistrict('');
-                      setUpazila('');
-                    }}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
-                  >
-                    <option value="">বিভাগ সিলেক্ট করুন</option>
-                    {Object.keys(BD_LOCATIONS).map((div) => (
-                      <option key={div} value={div}>{div}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[12px] font-medium text-slate-600 dark:text-slate-400 mb-1">জেলা</label>
-                  <select
-                    disabled={!division}
-                    value={district}
-                    onChange={(e) => {
-                      setDistrict(e.target.value);
-                      setUpazila('');
-                    }}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:cursor-not-allowed"
-                  >
-                    <option value="">জেলা সিলেক্ট করুন</option>
-                    {division &&
-                      Object.keys(BD_LOCATIONS[division] || {}).map((dist) => (
-                        <option key={dist} value={dist}>{dist}</option>
-                      ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[12px] font-medium text-slate-600 dark:text-slate-400 mb-1">উপজেলা / থানা</label>
-                  <select
-                    disabled={!district}
-                    value={upazila}
-                    onChange={(e) => setUpazila(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:cursor-not-allowed"
-                  >
-                    <option value="">উপজেলা/থানা সিলেক্ট করুন</option>
-                    {division && district &&
-                      BD_LOCATIONS[division]?.[district]?.map((upz) => (
-                        <option key={upz} value={upz}>{upz}</option>
-                      ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[12px] font-medium text-slate-600 dark:text-slate-400 mb-1">গ্রাম / মহল্লা / রোড (ঐচ্ছিক)</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <Building className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-                    </div>
-                    <input
-                      value={areaDetails}
-                      onChange={(e) => setAreaDetails(e.target.value)}
-                      placeholder="যেমন: ব্লক-সি, রোড নং-৪"
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-9 pr-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Blood Group */}
-              <div>
-                <label className="block text-[13px] font-semibold text-slate-600 dark:text-slate-300 mb-1.5 ml-1">রক্তের গ্রুপ</label>
-                <select
-                  value={form.blood_group}
-                  onChange={(e) => setForm({ ...form, blood_group: e.target.value as BloodGroup })}
-                  className="w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-800/90 px-4 py-3.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-[3px] focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500 transition-all shadow-sm"
-                >
-                  {BLOOD_GROUPS.map((bg) => (
-                    <option key={bg} value={bg}>{bg}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Last Donation */}
-              <div>
-                <label className="block text-[13px] font-semibold text-slate-600 dark:text-slate-300 mb-1.5 ml-1">
-                  শেষ রক্তদানের তারিখ (যদি থাকে)
-                </label>
-                <input
-                  type="date"
-                  value={form.last_donation_date}
-                  onChange={(e) => setForm({ ...form, last_donation_date: e.target.value })}
-                  max={new Date().toISOString().split('T')[0]}
-                  className="w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-800/90 px-4 py-3.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-[3px] focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500 transition-all shadow-sm"
-                />
-              </div>
-
-              {/* GPS Location */}
-              <div>
-                <label className="block text-[13px] font-semibold text-slate-600 dark:text-slate-300 mb-1.5 ml-1">আপনার জিপিএস লোকেশন</label>
-                <button
-                  type="button"
-                  onClick={handleUseLocation}
-                  disabled={locating}
-                  className={`w-full flex items-center justify-center gap-2 rounded-2xl border py-3.5 text-sm font-medium transition-all ${
-                    coords
-                      ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
-                      : 'border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  } disabled:opacity-60`}
-                >
-                  <MapPin className="h-4 w-4" />
-                  {locating ? 'লোকেশন খোঁজা হচ্ছে...' : coords ? 'লোকেশন যুক্ত হয়েছে ✓' : 'বর্তমান জিপিএস লোকেশন শেয়ার করুন'}
-                </button>
-              </div>
-
-              {/* Error */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/50 rounded-2xl px-4 py-3">
-                      {error}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="group w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 py-4 text-sm font-bold text-white shadow-xl shadow-red-200/70 dark:shadow-none disabled:opacity-60"
+            <div>
+              <label className="mb-1.5 ml-1 block text-[13px] font-bold text-slate-700 dark:text-slate-300">জেলা</label>
+              <select
+                disabled={!division}
+                value={district}
+                onChange={(e) => {
+                  setDistrict(e.target.value);
+                  setUpazila('');
+                }}
+                className={selectCls}
               >
-                {submitting ? 'রেজিস্টার হচ্ছে...' : (
-                  <>
-                    ডোনার হিসেবে রেজিস্টার করুন
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </button>
+                <option value="">জেলা সিলেক্ট করুন</option>
+                {division &&
+                  Object.keys(BD_LOCATIONS[division] || {}).map((dist) => (
+                    <option key={dist} value={dist}>{dist}</option>
+                  ))}
+              </select>
+            </div>
 
-              <p className="text-center text-sm text-slate-500 dark:text-slate-400 pt-1">
-                আগে থেকে একাউন্ট আছে?{' '}
-                <a href="/login" className="text-red-600 dark:text-red-400 font-semibold hover:underline">
-                  লগইন করুন
-                </a>
-              </p>
-            </form>
+            <div>
+              <label className="mb-1.5 ml-1 block text-[13px] font-bold text-slate-700 dark:text-slate-300">উপজেলা / থানা</label>
+              <select disabled={!district} value={upazila} onChange={(e) => setUpazila(e.target.value)} className={selectCls}>
+                <option value="">উপজেলা/থানা সিলেক্ট করুন</option>
+                {division &&
+                  district &&
+                  BD_LOCATIONS[division]?.[district]?.map((upz) => (
+                    <option key={upz} value={upz}>{upz}</option>
+                  ))}
+              </select>
+            </div>
           </div>
-        </motion.div>
-      </div>
-    </main>
+
+          <Field label="গ্রাম / মহল্লা / রোড (ঐচ্ছিক)" icon={Building}>
+            <input
+              value={areaDetails}
+              onChange={(e) => setAreaDetails(e.target.value)}
+              placeholder="যেমন: ব্লক-সি, রোড নং-৪"
+              className={inputCls}
+            />
+          </Field>
+        </Section>
+
+        {/* রক্তের তথ্য */}
+        <Section
+          tone="red"
+          title="রক্তের তথ্য"
+          step="ধাপ ৩"
+          note="আপনার রক্তের গ্রুপ বেছে নিন। শেষ রক্তদানের ৩ মাস পর আবার দেওয়া যায়।"
+        >
+          <div>
+            <label className="mb-2 ml-1 flex items-center gap-1.5 text-[13px] font-bold text-slate-700 dark:text-slate-300">
+              <Droplet className="h-4 w-4 text-red-600" fill="currentColor" /> রক্তের গ্রুপ
+            </label>
+            <div className="grid grid-cols-4 gap-2.5">
+              {BLOOD_GROUPS.map((bg) => {
+                const active = form.blood_group === bg;
+                return (
+                  <motion.button
+                    key={bg}
+                    type="button"
+                    onClick={() => setForm({ ...form, blood_group: bg })}
+                    whileHover={{ y: -3 }}
+                    whileTap={{ scale: 0.93 }}
+                    className={`rounded-2xl py-3 text-lg font-extrabold transition-shadow ${
+                      active
+                        ? 'bg-gradient-to-br from-red-500 via-red-600 to-red-900 text-white shadow-lg shadow-red-300/60 dark:shadow-none'
+                        : 'bg-white text-red-800 shadow-sm shadow-orange-200/60 dark:bg-slate-800 dark:text-red-300 dark:shadow-none'
+                    }`}
+                  >
+                    {bg}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          <Field label="শেষ রক্তদানের তারিখ (যদি থাকে)" icon={CalendarDays}>
+            <input
+              type="date"
+              value={form.last_donation_date}
+              onChange={(e) => setForm({ ...form, last_donation_date: e.target.value })}
+              max={new Date().toISOString().split('T')[0]}
+              className={inputCls}
+            />
+          </Field>
+        </Section>
+
+        {/* জিপিএস */}
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-teal-100 p-5 dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-slate-900">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-lg font-extrabold text-emerald-950 dark:text-emerald-300">আপনার জিপিএস লোকেশন</span>
+            <span className="text-sm text-emerald-800/80 dark:text-emerald-400/80">কাছের মানুষ যেন সহজে খুঁজে পায়</span>
+          </div>
+          <motion.button
+            type="button"
+            onClick={handleUseLocation}
+            disabled={locating}
+            whileHover={{ y: -3 }}
+            whileTap={{ scale: 0.96 }}
+            className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-extrabold text-white shadow-lg disabled:opacity-60 ${
+              coords ? 'bg-gradient-to-r from-emerald-500 to-teal-700' : 'bg-gradient-to-r from-teal-600 to-emerald-900'
+            }`}
+          >
+            <MapPin className="h-4 w-4" />
+            {locating ? 'লোকেশন খোঁজা হচ্ছে...' : coords ? 'লোকেশন যুক্ত হয়েছে ✓' : 'লোকেশন নিন'}
+          </motion.button>
+        </div>
+
+        <FormError error={error} />
+
+        <SubmitButton loading={submitting} loadingText="রেজিস্টার হচ্ছে...">
+          ডোনার হিসেবে রেজিস্টার করুন
+        </SubmitButton>
+
+        <p className="text-center text-sm text-slate-600 dark:text-slate-400">
+          আগে থেকে একাউন্ট আছে?{' '}
+          <a href="/login" className="font-bold text-red-600 underline-offset-4 hover:underline dark:text-red-400">
+            লগইন করুন
+          </a>
+        </p>
+      </form>
+    </AuthShell>
   );
 }

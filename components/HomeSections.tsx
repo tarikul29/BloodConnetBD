@@ -79,7 +79,7 @@ export function HowItWorks() {
           className="max-w-2xl"
         >
           <span className="text-sm font-semibold text-red-600 dark:text-red-400">কীভাবে কাজ করে</span>
-          <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
+          <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-[1.4]">
             চার ধাপে রক্ত পৌঁছে যায় প্রয়োজনের কাছে
           </h2>
         </motion.div>
@@ -169,7 +169,7 @@ export function PhotoFeature() {
             <motion.span variants={reveal} className="text-sm font-semibold text-amber-300">
               নিশ্চিন্তে রক্ত দিন
             </motion.span>
-            <motion.h2 variants={reveal} className="text-3xl sm:text-4xl font-extrabold leading-tight text-white">
+            <motion.h2 variants={reveal} className="text-3xl sm:text-4xl font-extrabold leading-[1.4] text-white">
               রক্তদান সহজ আর নিরাপদ
             </motion.h2>
             {POINTS.map((p) => (
@@ -279,7 +279,7 @@ export function WhyUs() {
           className="mx-auto max-w-2xl text-center"
         >
           <span className="text-sm font-semibold text-red-600 dark:text-red-400">কেন BloodConnect BD</span>
-          <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
+          <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-[1.4]">
             জরুরি মুহূর্তে যা সবচেয়ে বেশি দরকার, সবই এক জায়গায়
           </h2>
           <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
@@ -341,7 +341,7 @@ export function Compatibility() {
           className="flex flex-col justify-center gap-4"
         >
           <span className="text-sm font-semibold text-red-600 dark:text-red-400">রক্তের গ্রুপ</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight text-slate-900 dark:text-white">
+          <h2 className="text-3xl sm:text-4xl font-extrabold leading-[1.4] text-slate-900 dark:text-white">
             কে কাকে রক্ত দিতে পারে
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -581,7 +581,7 @@ export function LiveRequests() {
               </span>
               লাইভ রিকোয়েস্ট
             </span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
+            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-[1.4]">
               এই মুহূর্তে যাদের রক্ত দরকার
             </h2>
           </div>
@@ -680,7 +680,7 @@ export function BloodHeroes() {
           className="mx-auto max-w-2xl text-center"
         >
           <span className="text-sm font-semibold text-red-600 dark:text-red-400">আমাদের রক্তযোদ্ধারা</span>
-          <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
+          <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-[1.4]">
             যাঁদের জন্য কেউ ফিরে পেয়েছেন জীবন
           </h2>
           {fulfilled !== null && fulfilled > 0 && (
@@ -825,7 +825,7 @@ export function AppInstall() {
           className="flex flex-col gap-5"
         >
           <motion.span variants={reveal} className="text-sm font-semibold text-amber-300">মোবাইলে</motion.span>
-          <motion.h2 variants={reveal} className="text-3xl sm:text-4xl font-extrabold leading-tight">
+          <motion.h2 variants={reveal} className="text-3xl sm:text-4xl font-extrabold leading-[1.4]">
             ফোনের হোম স্ক্রিনে রাখুন, এক ট্যাপেই খুলুন
           </motion.h2>
           <motion.p variants={reveal} className="text-lg text-emerald-50/85 leading-relaxed">
@@ -926,7 +926,7 @@ export function FinalCTA() {
           />
           <div className="relative flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
             <div className="max-w-2xl">
-              <h2 className="text-3xl sm:text-5xl font-extrabold leading-tight text-white">
+              <h2 className="text-3xl sm:text-5xl font-extrabold leading-[1.4] text-white">
                 আজই একজন জীবনরক্ষক হোন
               </h2>
               <p className="mt-3 text-lg text-red-50/90">

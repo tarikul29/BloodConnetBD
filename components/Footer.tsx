@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, ArrowUp, Heart } from 'lucide-react';
@@ -107,10 +108,44 @@ export default function Footer() {
           </motion.div>
         </motion.div>
 
+        {/* ডেভেলপার ক্রেডিট */}
+        <motion.div
+          variants={fade}
+          className="relative mt-10 overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-r from-white/10 via-white/5 to-white/10 p-5 backdrop-blur-md sm:p-6"
+        >
+          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+            <div className="relative h-16 w-16 shrink-0">
+              <motion.span
+                aria-hidden
+                animate={{ rotate: 360 }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 rounded-full"
+                style={{ background: 'conic-gradient(#ffd35e,#e8503f,#2fa886,#ffd35e)' }}
+              />
+              <span className="absolute inset-[3px] overflow-hidden rounded-full bg-emerald-950">
+                <Image src="/developer.jpg" alt="Tarikul Islam" fill sizes="64px" className="object-cover object-[50%_20%]" />
+              </span>
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-yellow-300">Developed by</p>
+              <p className="mt-0.5 text-xl font-extrabold text-white">Tarikul Islam</p>
+              <p className="text-sm text-emerald-50/70">
+                ডিজাইন ও ডেভেলপমেন্ট · BloodConnect BD · NextGen Developers
+              </p>
+            </div>
+            <a
+              href="mailto:tarikulislam870265@gmail.com"
+              className="rounded-full bg-gradient-to-r from-yellow-300 to-amber-500 px-5 py-2.5 text-xs font-bold text-slate-900 shadow-lg transition-transform hover:-translate-y-0.5"
+            >
+              যোগাযোগ করুন
+            </a>
+          </div>
+        </motion.div>
+
         {/* নিচের বার */}
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
           <p className="text-xs text-emerald-50/55">
-            © {new Date().getFullYear()} BloodConnect BD. All rights reserved.
+            © {new Date().getFullYear()} BloodConnect BD. Developed with ❤ by Tarikul Islam.
           </p>
           <motion.button
             whileHover={{ y: -4, scale: 1.05 }}

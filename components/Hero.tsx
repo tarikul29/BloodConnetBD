@@ -129,15 +129,14 @@ export default function Hero({ onEmergencyClick }: HeroProps) {
 
             <motion.h1
               variants={item}
-              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] text-slate-900 dark:text-white"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.5] text-slate-900 dark:text-white"
             >
-              প্রতিটি ফোঁটা
-              <br />
+              <span className="block pb-1">প্রতিটি ফোঁটা</span>
               <motion.span
                 animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
                 transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
                 style={{ backgroundSize: '220% 100%' }}
-                className="bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 bg-clip-text text-transparent"
+                className="block mt-2 pb-3 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 bg-clip-text text-transparent"
               >
                 একটি জীবন
               </motion.span>
