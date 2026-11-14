@@ -41,11 +41,11 @@ export default function Hero({ onEmergencyClick }: HeroProps) {
 
       const { count: donors } = await supabase
         .from('donors')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true });
 
       const { count: activeDonors } = await supabase
         .from('donors')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('is_available', true);
 
       const { count: fulfilled } = await supabase

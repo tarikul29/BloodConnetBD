@@ -33,11 +33,11 @@ export default function DashboardPage() {
 
       const { data } = await supabase
         .from('donors')
-        .select('*')
+        .select('id, full_name, phone, blood_group, address, last_donation_date, is_available, photo_url, created_at')
         .eq('id', user.id)
         .single();
 
-      setDonor(data);
+      setDonor(data ? ({ ...data, email: user.email ?? null } as Donor) : null);
       setLoading(false);
     }
     loadDonor();
@@ -46,6 +46,12 @@ export default function DashboardPage() {
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+      setMessage('শুধু ছবি দিন, আর সাইজ ৫ MB এর বেশি হবে না।');
+      e.target.value = '';
+      return;
+    }
+    setMessage(null);
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
   }

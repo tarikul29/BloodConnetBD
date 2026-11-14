@@ -14,7 +14,6 @@ import {
   KeyRound
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import type { Donor, BloodRequest } from '@/types/database';
 
@@ -74,15 +73,19 @@ export default function AdminPage() {
 
   async function fetchData() {
     setLoading(true);
-    const supabase = createClient();
-
-    const [donorsRes, requestsRes] = await Promise.all([
-      supabase.from('donors').select('*').order('created_at', { ascending: false }),
-      supabase.from('blood_requests').select('*').order('created_at', { ascending: false })
-    ]);
-
-    setDonors(donorsRes.data ?? []);
-    setRequests(requestsRes.data ?? []);
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: sessionStorage.getItem('admin_key'), action: 'list' }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      setDonors(json.donors ?? []);
+      setRequests(json.requests ?? []);
+    } else {
+      sessionStorage.removeItem('admin_key');
+      setIsAuthenticated(false);
+    }
     setLoading(false);
   }
 

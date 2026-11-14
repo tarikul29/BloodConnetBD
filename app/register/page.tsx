@@ -258,6 +258,12 @@ export default function DonorRegisterPage() {
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+      setError('শুধু ছবি দিন, আর সাইজ ৫ MB এর বেশি হবে না।');
+      e.target.value = '';
+      return;
+    }
+    setError(null);
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
   }
