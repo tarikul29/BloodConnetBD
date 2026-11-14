@@ -126,7 +126,7 @@ export default function Header() {
           </Link>
 
           {/* ডেস্কটপ মেনু */}
-          <nav className="hidden md:flex items-center gap-1" onMouseLeave={() => setHovered(null)}>
+          <nav className="hidden lg:flex items-center gap-1" onMouseLeave={() => setHovered(null)}>
             {NAV_LINKS.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -161,7 +161,7 @@ export default function Header() {
           </nav>
 
           {/* ডান পাশ (ডেস্কটপ) */}
-          <div className="hidden md:flex items-center gap-3 shrink-0">
+          <div className="hidden lg:flex items-center gap-3 shrink-0">
             <ThemeToggle />
 
             <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}>
@@ -212,7 +212,7 @@ export default function Header() {
           </div>
 
           {/* মোবাইল */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-2">
             <ThemeToggle />
             {authReady && user && (
               <Link href="/dashboard" aria-label="My Profile">
@@ -237,7 +237,7 @@ export default function Header() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="md:hidden overflow-hidden"
+              className="lg:hidden overflow-hidden"
             >
               <div className="pb-5 pt-2 flex flex-col gap-2">
                 {authReady && user && (
