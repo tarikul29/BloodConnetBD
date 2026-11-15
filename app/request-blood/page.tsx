@@ -105,7 +105,9 @@ export default function RequestBloodPage() {
     setSubmitting(true);
     const supabase = createClient();
 
+    const requestId = crypto.randomUUID();
     const { error: insertError } = await supabase.from('blood_requests').insert({
+      id: requestId,
       patient_name: form.patient_name,
       hospital_name: form.hospital_name,
       blood_group: form.blood_group,
@@ -123,6 +125,14 @@ export default function RequestBloodPage() {
       setError('কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।');
       return;
     }
+
+    // কাছের ডোনারদের নোটিফিকেশন পাঠানো (ব্যর্থ হলেও রিকোয়েস্ট সাবমিট ঠিক থাকবে)
+    fetch('/api/notify-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: requestId }),
+      keepalive: true,
+    }).catch(() => {});
 
     setSuccess(true);
   }

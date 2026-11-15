@@ -64,7 +64,9 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
     setSubmitting(true);
     const supabase = createClient();
 
+    const requestId = crypto.randomUUID();
     const { error: insertError } = await supabase.from('blood_requests').insert({
+      id: requestId,
       patient_name: form.patient_name,
       hospital_name: form.hospital_name,
       blood_group: form.blood_group,
@@ -81,6 +83,14 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
       setError('Something went wrong. Please try again.');
       return;
     }
+
+    // কাছের ডোনারদের নোটিফিকেশন পাঠানো (ব্যর্থ হলেও রিকোয়েস্ট সাবমিট ঠিক থাকবে)
+    fetch('/api/notify-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: requestId }),
+      keepalive: true,
+    }).catch(() => {});
 
     onSuccess?.();
     onClose();

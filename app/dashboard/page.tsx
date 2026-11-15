@@ -6,6 +6,7 @@ import { Droplet, User, Phone, Mail, LogOut, CheckCircle2, XCircle, Image as Ima
 import { createClient } from '@/lib/supabase/client';
 import { checkDonorEligibility } from '@/lib/eligibility';
 import Header from '@/components/Header';
+import PushToggle from '@/components/PushToggle';
 import { Field, Section, FormError, inputCls, selectCls } from '@/components/FormUI';
 import { motion } from 'framer-motion';
 import type { Donor, BloodGroup } from '@/types/database';
@@ -337,6 +338,10 @@ export default function DashboardPage() {
                 {donor.is_available ? 'চালু আছে' : 'বন্ধ আছে'}
               </motion.button>
             </div>
+          </Section>
+
+          <Section tone="gold" title="জরুরি নোটিফিকেশন" note="কেউ আপনার কাছাকাছি আপনার গ্রুপের রক্ত চাইলে সঙ্গে সঙ্গে ফোনে জানতে পারবেন। যেকোনো সময় বন্ধ করা যায়।">
+            <PushToggle />
           </Section>
 
           {message && !isOk && <FormError error={message} />}
