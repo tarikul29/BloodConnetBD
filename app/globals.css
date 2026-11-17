@@ -1,3 +1,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ---- আইফোন (Safari) ফিক্স ---- */
+
+/* ১) তারিখের ঘর (date input) আইফোনে নিজের মাপ ছাড়িয়ে পাশে বেরিয়ে যেত */
+input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 3.25rem;
+  text-align: left;
+}
+input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+  min-width: 0;
+}
+input[type='date']::-webkit-datetime-edit {
+  padding: 0;
+}
+
+/* ২) আইফোনে ঘরে ট্যাপ করলে ১৬px এর ছোট লেখা হলে পুরো পেজ জুম হয়ে যায় — মোবাইলে ১৬px রাখি */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ৩) কোনো কারণে কিছু বেরিয়ে গেলেও পুরো পেজ যেন ডানে না সরে */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
