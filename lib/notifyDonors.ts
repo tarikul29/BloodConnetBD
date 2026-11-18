@@ -1,66 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
 import { haversineDistance } from '@/lib/geo';
 import { checkDonorEligibility } from '@/lib/eligibility';
 import { donorGroupsFor } from '@/lib/bloodCompat';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 const RADIUS_KM = Number(process.env.NOTIFY_RADIUS_KM || 50); // এই দূরত্বের মধ্যের ডোনাররা নোটিফিকেশন পাবেন
 const MAX_RECIPIENTS = 300;
-const FRESH_MS = 10 * 60 * 1000; // রিকোয়েস্ট তৈরির ১০ মিনিটের মধ্যেই শুধু নোটিফাই হবে
 
-// স্প্যাম ঠেকাতে: একই আইপি থেকে ১০ মিনিটে ৫ বারের বেশি নয়
-const hits = new Map<string, { count: number; resetAt: number }>();
-function limited(ip: string) {
-  const now = Date.now();
-  const r = hits.get(ip);
-  if (!r || r.resetAt < now) {
-    hits.set(ip, { count: 1, resetAt: now + 10 * 60 * 1000 });
-    return false;
-  }
-  r.count += 1;
-  return r.count > 5;
-}
-
-export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (limited(ip)) return NextResponse.json({ ok: false, error: 'rate' }, { status: 429 });
-
-  let id: unknown;
-  try {
-    ({ id } = await req.json());
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 400 });
-  }
-  if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/i.test(id)) {
-    return NextResponse.json({ ok: false }, { status: 400 });
-  }
-
+/** নতুন রিকোয়েস্টের জন্য কাছের, মানানসই ও প্রস্তুত ডোনারদের পুশ নোটিফিকেশন পাঠায়। */
+export async function notifyDonors(supabase: SupabaseClient, requestId: string): Promise<{ sent: number; donors: number }> {
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
-  if (!pub || !priv) {
-    return NextResponse.json({ ok: true, sent: 0, skipped: 'push-not-configured' });
-  }
+  if (!pub || !priv) return { sent: 0, donors: 0 };
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@bloodconnect.bd', pub, priv);
 
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
   // একটি রিকোয়েস্টের জন্য একবারই: notified_at ফাঁকা থাকলেই দাবি করা যাবে
-  const cutoff = new Date(Date.now() - FRESH_MS).toISOString();
   const { data: claimed, error: claimErr } = await supabase
     .from('blood_requests')
     .update({ notified_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq('id', requestId)
     .is('notified_at', null)
-    .gte('created_at', cutoff)
     .in('urgency_status', ['critical', 'urgent', 'moderate'])
     .select('id, blood_group, hospital_name, bags_needed, latitude, longitude, urgency_status');
-  if (claimErr || !claimed || claimed.length === 0) {
-    return NextResponse.json({ ok: true, sent: 0 });
-  }
+  if (claimErr || !claimed || claimed.length === 0) return { sent: 0, donors: 0 };
   const request = claimed[0];
 
   const { data: donors } = await supabase
@@ -82,7 +44,7 @@ export async function POST(req: NextRequest) {
     .sort((a, b) => a.km - b.km)
     .slice(0, MAX_RECIPIENTS);
 
-  if (targets.length === 0) return NextResponse.json({ ok: true, sent: 0, donors: 0 });
+  if (targets.length === 0) return { sent: 0, donors: 0 };
 
   const kmById = new Map(targets.map((t) => [t.id, t.km]));
   const { data: subs } = await supabase
@@ -120,6 +82,5 @@ export async function POST(req: NextRequest) {
   }
 
   if (dead.length) await supabase.from('push_subscriptions').delete().in('id', dead);
-
-  return NextResponse.json({ ok: true, sent, donors: targets.length });
+  return { sent, donors: targets.length };
 }

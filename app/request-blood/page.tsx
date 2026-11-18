@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Droplet, MapPin, Phone, Building2, User, FileText, Minus, Plus } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
 import { AuthShell, Field, FormError, FormHeading, Section, SubmitButton, SuccessScreen, inputCls } from '@/components/FormUI';
 import type { BloodGroup } from '@/types/database';
 
@@ -25,6 +25,8 @@ export default function RequestBloodPage() {
   const [showHospitalSuggestions, setShowHospitalSuggestions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaReset, setCaptchaReset] = useState(0);
   const [success, setSuccess] = useState(false);
 
 
@@ -102,37 +104,45 @@ export default function RequestBloodPage() {
       return;
     }
 
-    setSubmitting(true);
-    const supabase = createClient();
-
-    const requestId = crypto.randomUUID();
-    const { error: insertError } = await supabase.from('blood_requests').insert({
-      id: requestId,
-      patient_name: form.patient_name,
-      hospital_name: form.hospital_name,
-      blood_group: form.blood_group,
-      bags_needed: form.bags_needed,
-      latitude: coords.lat,
-      longitude: coords.lng,
-      contact_phone: form.contact_phone,
-      urgency_status: 'critical',
-      patient_notes: form.patient_notes || null,
-    });
-
-    setSubmitting(false);
-
-    if (insertError) {
-      setError('কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError('অনুগ্রহ করে "আমি রোবট নই" যাচাই সম্পন্ন করুন।');
       return;
     }
 
-    // কাছের ডোনারদের নোটিফিকেশন পাঠানো (ব্যর্থ হলেও রিকোয়েস্ট সাবমিট ঠিক থাকবে)
-    fetch('/api/notify-request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: requestId }),
-      keepalive: true,
-    }).catch(() => {});
+    setSubmitting(true);
+    let res: Response | null = null;
+    try {
+      res = await fetch('/api/request-blood', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_name: form.patient_name,
+          hospital_name: form.hospital_name,
+          blood_group: form.blood_group,
+          bags_needed: form.bags_needed,
+          latitude: coords.lat,
+          longitude: coords.lng,
+          contact_phone: form.contact_phone,
+          patient_notes: form.patient_notes || null,
+          captchaToken,
+        }),
+      });
+    } catch {
+      res = null;
+    }
+    setSubmitting(false);
+
+    if (!res || !res.ok) {
+      setCaptchaReset((n) => n + 1);
+      if (res?.status === 429) {
+        setError('অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।');
+      } else if (res?.status === 400) {
+        setError('যাচাই ব্যর্থ হয়েছে বা তথ্যে ভুল আছে। ফর্মটি দেখে আবার চেষ্টা করুন।');
+      } else {
+        setError('কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+      }
+      return;
+    }
 
     setSuccess(true);
   }
@@ -321,6 +331,8 @@ export default function RequestBloodPage() {
             )}
           </AnimatePresence>
         </Section>
+
+        <Turnstile onToken={setCaptchaToken} resetKey={captchaReset} />
 
         <FormError error={error} />
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
 import { AuthShell, Field, FormError, FormHeading, SubmitButton, inputCls } from '@/components/FormUI';
 
 export default function LoginPage() {
@@ -13,21 +14,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError('অনুগ্রহ করে "আমি রোবট নই" যাচাই সম্পন্ন করুন।');
+      return;
+    }
     setSubmitting(true);
 
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken: captchaToken || undefined },
     });
 
     setSubmitting(false);
 
     if (signInError) {
+      setCaptchaReset((n) => n + 1);
       setError('ইমেইল বা পাসওয়ার্ড ভুল হয়েছে।');
       return;
     }
@@ -79,6 +88,8 @@ export default function LoginPage() {
             className={inputCls}
           />
         </Field>
+
+        <Turnstile onToken={setCaptchaToken} resetKey={captchaReset} />
 
         <FormError error={error} />
 

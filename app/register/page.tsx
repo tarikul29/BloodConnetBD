@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Phone, Mail, MapPin, Camera, Lock, Building, CalendarDays, Droplet } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
 import { AuthShell, Field, FormError, FormHeading, Section, SubmitButton, SuccessScreen, inputCls, selectCls } from '@/components/FormUI';
 import type { BloodGroup } from '@/types/database';
 
@@ -252,6 +253,8 @@ export default function DonorRegisterPage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaReset, setCaptchaReset] = useState(0);
   const [success, setSuccess] = useState(false);
 
 
@@ -310,16 +313,23 @@ export default function DonorRegisterPage() {
       return;
     }
 
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError('অনুগ্রহ করে "আমি রোবট নই" যাচাই সম্পন্ন করুন।');
+      return;
+    }
+
     setSubmitting(true);
     const supabase = createClient();
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
+      options: { captchaToken: captchaToken || undefined },
     });
 
     if (authError) {
       setSubmitting(false);
+      setCaptchaReset((n) => n + 1);
       if (authError.message.includes('already registered')) {
         setError('এই ইমেইল দিয়ে ইতিমধ্যে একটি একাউন্ট আছে।');
       } else {
@@ -641,6 +651,8 @@ export default function DonorRegisterPage() {
             {locating ? 'লোকেশন খোঁজা হচ্ছে...' : coords ? 'লোকেশন যুক্ত হয়েছে ✓' : 'লোকেশন নিন'}
           </motion.button>
         </div>
+
+        <Turnstile onToken={setCaptchaToken} resetKey={captchaReset} />
 
         <FormError error={error} />
 

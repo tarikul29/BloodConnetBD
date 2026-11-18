@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X, Droplet, MapPin, Phone, Building2, User } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
 import type { BloodGroup } from '@/types/database';
 
 const BLOOD_GROUPS: BloodGroup[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -25,6 +25,8 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   if (!isOpen) return null;
 
@@ -61,36 +63,40 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
       return;
     }
 
-    setSubmitting(true);
-    const supabase = createClient();
-
-    const requestId = crypto.randomUUID();
-    const { error: insertError } = await supabase.from('blood_requests').insert({
-      id: requestId,
-      patient_name: form.patient_name,
-      hospital_name: form.hospital_name,
-      blood_group: form.blood_group,
-      bags_needed: form.bags_needed,
-      latitude: coords.lat,
-      longitude: coords.lng,
-      contact_phone: form.contact_phone,
-      urgency_status: 'critical',
-    });
-
-    setSubmitting(false);
-
-    if (insertError) {
-      setError('Something went wrong. Please try again.');
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError('Please complete the verification ("I am not a robot").');
       return;
     }
 
-    // কাছের ডোনারদের নোটিফিকেশন পাঠানো (ব্যর্থ হলেও রিকোয়েস্ট সাবমিট ঠিক থাকবে)
-    fetch('/api/notify-request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: requestId }),
-      keepalive: true,
-    }).catch(() => {});
+    setSubmitting(true);
+    let res: Response | null = null;
+    try {
+      res = await fetch('/api/request-blood', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_name: form.patient_name,
+          hospital_name: form.hospital_name,
+          blood_group: form.blood_group,
+          bags_needed: form.bags_needed,
+          latitude: coords.lat,
+          longitude: coords.lng,
+          contact_phone: form.contact_phone,
+          captchaToken,
+        }),
+      });
+    } catch {
+      res = null;
+    }
+    setSubmitting(false);
+
+    if (!res || !res.ok) {
+      setCaptchaReset((n) => n + 1);
+      if (res?.status === 429) setError('Too many attempts. Please try again later.');
+      else if (res?.status === 400) setError('Verification failed or some details are invalid. Please check and retry.');
+      else setError('Something went wrong. Please try again.');
+      return;
+    }
 
     onSuccess?.();
     onClose();
@@ -196,6 +202,8 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
               </button>
             </Field>
           </div>
+
+          <Turnstile onToken={setCaptchaToken} resetKey={captchaReset} />
 
           {error && (
             <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/50 dark:text-red-400">
