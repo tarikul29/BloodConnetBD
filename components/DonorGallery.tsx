@@ -101,9 +101,6 @@ export default function DonorGallery() {
           <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold leading-[1.4] text-slate-900 dark:text-white">
             যাঁরা রক্ত দিয়ে পাশে দাঁড়িয়েছেন
           </h2>
-          <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-[1.8]">
-            ছবি ডানে-বামে টেনে সবাইকে দেখুন। আপনাদের সবাইকে ধন্যবাদ।
-          </p>
         </div>
 
         <div
