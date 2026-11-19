@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { User, Phone, Mail, MapPin, Camera, Lock, Building, CalendarDays, Droplet } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
+import { compressImage } from '@/lib/imageCompress';
 import { AuthShell, Field, FormError, FormHeading, Section, SubmitButton, SuccessScreen, inputCls, selectCls } from '@/components/FormUI';
 import type { BloodGroup } from '@/types/database';
 
@@ -258,17 +259,25 @@ export default function DonorRegisterPage() {
   const [success, setSuccess] = useState(false);
 
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
-      setError('শুধু ছবি দিন, আর সাইজ ৫ MB এর বেশি হবে না।');
-      e.target.value = '';
+    if (!file.type.startsWith('image/') || file.size > 25 * 1024 * 1024) {
+      setError('শুধু ছবি দিন।');
+      input.value = '';
       return;
     }
     setError(null);
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    try {
+      // ছবি নিজে থেকে ছোট হয়ে যাবে (প্রায় ১০০ KB), তাই বড় ছবি দিলেও সমস্যা নেই
+      const small = await compressImage(file, { maxSide: 600, maxBytes: 100 * 1024 });
+      setPhotoFile(small);
+      setPhotoPreview(URL.createObjectURL(small));
+    } catch {
+      setError('ছবিটা পড়া যায়নি। অন্য একটা ছবি দিন।');
+      input.value = '';
+    }
   }
 
   function handleUseLocation() {
@@ -341,12 +350,11 @@ export default function DonorRegisterPage() {
     let photo_url: string | null = null;
 
     if (photoFile) {
-      const fileExt = photoFile.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
 
       const { error: uploadError } = await supabase.storage
         .from('donor-photos')
-        .upload(fileName, photoFile);
+        .upload(fileName, photoFile, { contentType: 'image/jpeg' });
 
       if (!uploadError) {
         const { data: publicUrlData } = supabase.storage

@@ -25,9 +25,11 @@ import {
   CalendarPlus,
   RotateCcw,
   Ban,
+  ImagePlus,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
+import AdminGallery from '@/components/AdminGallery';
 import type { Donor, BloodRequest, UrgencyStatus } from '@/types/database';
 
 const GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -91,7 +93,7 @@ export default function AdminPage() {
   const [passwordError, setPasswordError] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'donors' | 'requests'>('donors');
+  const [activeTab, setActiveTab] = useState<'donors' | 'requests' | 'gallery'>('donors');
   const [donors, setDonors] = useState<Donor[]>([]);
   const [requests, setRequests] = useState<BloodRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -489,6 +491,7 @@ export default function AdminPage() {
               [
                 { k: 'donors', label: 'ডোনার', n: donors.length, icon: Users },
                 { k: 'requests', label: 'রিকোয়েস্ট', n: requests.length, icon: FileText },
+                { k: 'gallery', label: 'ছবি গ্যালারি', n: null, icon: ImagePlus },
               ] as const
             ).map((t) => (
               <button
@@ -501,11 +504,12 @@ export default function AdminPage() {
                 }`}
               >
                 <t.icon className="h-4 w-4" />
-                {t.label} ({bn(t.n)})
+                {t.label}{t.n !== null && ` (${bn(t.n)})`}
               </button>
             ))}
           </div>
 
+          {activeTab !== 'gallery' && (
           <div className="flex gap-2 w-full lg:w-auto">
             <div className="relative flex-1 lg:w-80">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -527,9 +531,13 @@ export default function AdminPage() {
               <span className="hidden sm:inline">CSV</span>
             </button>
           </div>
+          )}
         </div>
 
+        {activeTab === 'gallery' && <AdminGallery onToast={showToast} />}
+
         {/* ফিল্টার */}
+        {activeTab !== 'gallery' && (<>
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
           {activeTab === 'donors'
             ? (
@@ -730,6 +738,7 @@ export default function AdminPage() {
         <p className="text-center text-[11px] text-slate-400">
           দেখাচ্ছে {bn(activeTab === 'donors' ? filteredDonors.length : filteredRequests.length)} টি ফলাফল
         </p>
+        </>)}
       </div>
 
       {/* মুছে ফেলার নিশ্চিতকরণ */}

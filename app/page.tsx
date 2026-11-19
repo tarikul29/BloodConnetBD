@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import RequestModal from '@/components/RequestModal';
 import Footer from '@/components/Footer';
+import DonorGallery from '@/components/DonorGallery';
 import { Ticker, HowItWorks, WhyUs, LiveRequests, PhotoFeature, Compatibility, Eligibility, BloodHeroes, AppInstall, Faq, FinalCTA } from '@/components/HomeSections';
 
 export default function HomePage() {
@@ -17,6 +18,7 @@ export default function HomePage() {
       <main className="flex-1">
         <Hero onEmergencyClick={() => setModalOpen(true)} />
         <Ticker />
+        <DonorGallery />
         <HowItWorks />
         <WhyUs />
         <LiveRequests />
