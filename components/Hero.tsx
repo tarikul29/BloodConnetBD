@@ -14,6 +14,7 @@ import {
   useInView,
 } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
+import { eligibleSinceDate } from '@/lib/eligibility';
 
 interface HeroProps {
   onEmergencyClick: () => void;
@@ -46,7 +47,8 @@ export default function Hero({ onEmergencyClick }: HeroProps) {
       const { count: activeDonors } = await supabase
         .from('donors')
         .select('id', { count: 'exact', head: true })
-        .eq('is_available', true);
+        .eq('is_available', true)
+        .or(`last_donation_date.is.null,last_donation_date.lte.${eligibleSinceDate()}`);
 
       const { count: fulfilled } = await supabase
         .from('blood_requests')

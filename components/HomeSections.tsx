@@ -8,6 +8,7 @@ import { Check, Search, Phone, UserPlus, Send, MapPin, ShieldCheck, Bell, Zap, H
 import { createClient } from '@/lib/supabase/client';
 import type { BloodRequest } from '@/types/database';
 import { LogoMark } from './Logo';
+import { eligibleSinceDate } from '@/lib/eligibility';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -656,6 +657,7 @@ export function BloodHeroes() {
         .from('donors')
         .select('id, full_name, blood_group, address, photo_url')
         .eq('is_available', true)
+        .or(`last_donation_date.is.null,last_donation_date.lte.${eligibleSinceDate()}`)
         .order('created_at', { ascending: false })
         .limit(3);
       setDonors((data as HeroDonor[]) ?? []);

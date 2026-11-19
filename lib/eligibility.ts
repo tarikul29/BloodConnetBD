@@ -46,3 +46,35 @@ export function checkDonorEligibility(
     nextEligibleDate: daysRemaining === 0 ? null : nextEligibleDate,
   };
 }
+
+/** ডোনারের জনসমক্ষে দেখানোর অবস্থা: প্রস্তুত / কাউন্টডাউন চলছে / বিরতিতে */
+export type DonorPublicState = 'ready' | 'cooldown' | 'break';
+
+export interface DonorPublicStatus {
+  state: DonorPublicState;
+  daysRemaining: number; // শুধু 'cooldown' হলে > 0
+}
+
+/**
+ * শেষ রক্তদানের পর ৯০ দিন না গেলে কাউন্টডাউন সবার আগে দেখানো হয় (উপলব্ধতা চালু বা বন্ধ যাই থাকুক)।
+ * কাউন্টডাউন না থাকলে উপলব্ধতা চালু = প্রস্তুত, বন্ধ = বিরতিতে।
+ */
+export function getDonorPublicStatus(
+  isAvailable: boolean,
+  lastDonationDate: string | null
+): DonorPublicStatus {
+  let daysRemaining = 0;
+  try {
+    daysRemaining = checkDonorEligibility(lastDonationDate).daysRemaining;
+  } catch {
+    daysRemaining = 0;
+  }
+  if (daysRemaining > 0) return { state: 'cooldown', daysRemaining };
+  return { state: isAvailable ? 'ready' : 'break', daysRemaining: 0 };
+}
+
+/** আজ থেকে ৯০ দিন আগের তারিখ (YYYY-MM-DD)। এর আগে বা এই দিনে রক্ত দিলে আবার দিতে পারবেন। */
+export function eligibleSinceDate(): string {
+  const d = new Date(Date.now() - DONATION_COOLDOWN_DAYS * MS_PER_DAY);
+  return d.toISOString().slice(0, 10);
+}

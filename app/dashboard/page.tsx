@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Droplet, User, Phone, Mail, LogOut, CheckCircle2, XCircle, Image as ImageIcon, Camera, CalendarDays } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { checkDonorEligibility } from '@/lib/eligibility';
+import { checkDonorEligibility, getDonorPublicStatus } from '@/lib/eligibility';
+import { Clock } from 'lucide-react';
 import Header from '@/components/Header';
 import PushToggle from '@/components/PushToggle';
 import { Field, Section, FormError, inputCls, selectCls } from '@/components/FormUI';
@@ -168,6 +169,8 @@ export default function DashboardPage() {
   }
 
   const eligibility = checkDonorEligibility(donor.last_donation_date);
+  const publicStatus = getDonorPublicStatus(donor.is_available, donor.last_donation_date);
+  const bnDays = publicStatus.daysRemaining.toLocaleString('bn-BD');
   const isOk = !!message && message.includes('সফল');
 
   return (
@@ -241,11 +244,25 @@ export default function DashboardPage() {
                 </span>
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-bold ${
-                    donor.is_available ? 'bg-emerald-400/90 text-emerald-950' : 'bg-white/25 text-white'
+                    publicStatus.state === 'ready'
+                      ? 'bg-emerald-400/90 text-emerald-950'
+                      : publicStatus.state === 'cooldown'
+                      ? 'bg-amber-300 text-amber-950'
+                      : 'bg-white/25 text-white'
                   }`}
                 >
-                  {donor.is_available ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
-                  {donor.is_available ? 'রক্ত দিতে প্রস্তুত' : 'বিরতিতে আছেন'}
+                  {publicStatus.state === 'ready' ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  ) : publicStatus.state === 'cooldown' ? (
+                    <Clock className="h-3.5 w-3.5" />
+                  ) : (
+                    <XCircle className="h-3.5 w-3.5" />
+                  )}
+                  {publicStatus.state === 'ready'
+                    ? 'রক্ত দিতে প্রস্তুত'
+                    : publicStatus.state === 'cooldown'
+                    ? `${bnDays} দিন পর রক্ত দিতে পারবেন`
+                    : 'বিরতিতে আছেন'}
                 </span>
               </div>
               <p className="mt-2 text-xs text-red-50/90">ছবি বদলাতে ক্যামেরা আইকনে চাপুন</p>
@@ -313,7 +330,7 @@ export default function DashboardPage() {
             </Field>
             {!eligibility.isEligible && (
               <p className="rounded-2xl bg-amber-100 px-4 py-2.5 text-sm font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-                {eligibility.daysRemaining} দিন পর আপনি আবার রক্তদানে প্রস্তুত হবেন।
+                {bnDays} দিন পর আপনি আবার রক্তদানে প্রস্তুত হবেন। এই কাউন্টডাউন সবাই আপনার প্রোফাইলে দেখতে পাবে।
               </p>
             )}
           </Section>
@@ -338,6 +355,11 @@ export default function DashboardPage() {
                 {donor.is_available ? 'চালু আছে' : 'বন্ধ আছে'}
               </motion.button>
             </div>
+            {publicStatus.state === 'cooldown' && (
+              <p className="mt-3 rounded-2xl bg-amber-100 px-4 py-2.5 text-sm font-semibold leading-[1.8] text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+                এখন আপনার রক্তদানের কাউন্টডাউন চলছে, তাই সবার কাছে &quot;{bnDays} দিন পর রক্ত দিতে পারবেন&quot; দেখাবে এবং এই সময়ে জরুরি নোটিফিকেশন যাবে না। উপলব্ধতা বন্ধ রাখলেও কাউন্টডাউন দেখাবে।
+              </p>
+            )}
           </Section>
 
           <Section tone="gold" title="জরুরি নোটিফিকেশন" note="কেউ আপনার কাছাকাছি আপনার গ্রুপের রক্ত চাইলে সঙ্গে সঙ্গে ফোনে জানতে পারবেন। যেকোনো সময় বন্ধ করা যায়।">

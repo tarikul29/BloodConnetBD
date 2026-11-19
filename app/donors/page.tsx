@@ -23,6 +23,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import { CountUp } from '@/components/Hero';
+import { getDonorPublicStatus } from '@/lib/eligibility';
 import type { BloodGroup } from '@/types/database';
 
 // get_donors_with_distance ফাংশন থেকে আসা ডোনার (সঠিক কোঅর্ডিনেট আসে না, শুধু দূরত্ব)
@@ -181,11 +182,14 @@ export default function DonorsPage() {
         donor.phone?.includes(searchQuery);
       return matchesGroup && matchesSearch;
     });
-    // উপলব্ধ ডোনার আগে, বাকিদের ক্রম আগের মতোই থাকে
-    return [...list].sort((a, b) => Number(b.is_available) - Number(a.is_available));
+    // প্রস্তুত ডোনার আগে, বাকিদের ক্রম আগের মতোই থাকে
+    const isReady = (d: DonorWithDistance) => getDonorPublicStatus(d.is_available, d.last_donation_date).state === 'ready';
+    return [...list].sort((a, b) => Number(isReady(b)) - Number(isReady(a)));
   }, [donors, selectedGroup, searchQuery]);
 
-  const availableCount = donors.filter((d) => d.is_available).length;
+  const availableCount = donors.filter(
+    (d) => getDonorPublicStatus(d.is_available, d.last_donation_date).state === 'ready'
+  ).length;
 
   return (
     <main className="min-h-screen pt-16 bg-gradient-to-b from-orange-50 via-rose-50 to-amber-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 text-slate-800 dark:text-slate-100 relative overflow-hidden transition-colors">
@@ -506,6 +510,8 @@ export default function DonorsPage() {
             {filteredDonors.map((donor, i) => {
               const style = GROUP_STYLE[donor.blood_group] ?? GROUP_STYLE['A+'];
               const revealed = revealedId === donor.id;
+              const status = getDonorPublicStatus(donor.is_available, donor.last_donation_date);
+              const isReady = status.state === 'ready';
               return (
                 <motion.div
                   key={donor.id}
@@ -515,7 +521,7 @@ export default function DonorsPage() {
                   transition={{ duration: 0.7, ease, delay: (i % 3) * 0.08 }}
                   whileHover={{ y: -12 }}
                   className={`group relative flex flex-col overflow-hidden rounded-[2rem] border border-orange-100 dark:border-slate-800 bg-gradient-to-b from-white to-rose-50/60 dark:from-slate-900 dark:to-slate-900 shadow-lg shadow-red-200/30 dark:shadow-none transition-shadow hover:shadow-2xl hover:shadow-red-300/40 ${
-                    donor.is_available ? '' : 'opacity-90'
+                    isReady ? '' : 'opacity-90'
                   }`}
                 >
                   {/* রঙিন মাথা */}
@@ -566,7 +572,7 @@ export default function DonorsPage() {
                     </span>
                     <span
                       className={`absolute bottom-1 right-1 h-[18px] w-[18px] rounded-full border-[3px] border-white dark:border-slate-900 ${
-                        donor.is_available ? 'bg-emerald-500' : 'bg-amber-500'
+                        isReady ? 'bg-emerald-500' : 'bg-amber-500'
                       }`}
                     />
                   </div>
@@ -583,9 +589,13 @@ export default function DonorsPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      {donor.is_available ? (
+                      {status.state === 'ready' ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-950/60 dark:to-teal-950/40 px-3.5 py-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Ready to Donate
+                        </span>
+                      ) : status.state === 'cooldown' ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-950/60 dark:to-yellow-950/40 px-3.5 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+                          <Clock className="h-3.5 w-3.5" /> Can donate in {status.daysRemaining} day{status.daysRemaining !== 1 ? 's' : ''}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-950/60 dark:to-yellow-950/40 px-3.5 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
