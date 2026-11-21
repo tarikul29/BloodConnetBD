@@ -26,8 +26,11 @@ import {
   RotateCcw,
   Ban,
   ImagePlus,
+  Eye,
+  EyeOff,
+  Sparkles,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import Header from '@/components/Header';
 import AdminGallery from '@/components/AdminGallery';
 import type { Donor, BloodRequest, UrgencyStatus } from '@/types/database';
@@ -84,14 +87,64 @@ function downloadCsv(filename: string, rows: unknown[][]) {
   URL.revokeObjectURL(url);
 }
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const listItem: Variants = {
+  hidden: { opacity: 0, y: 14 },
+  show: (i: number) => ({ opacity: 1, y: 0, transition: { delay: Math.min(i, 12) * 0.04, duration: 0.4, ease: EASE } }),
+};
+
+// সংখ্যা ০ থেকে গুনে বাড়ে
+function CountUp({ value }: { value: number }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const from = 0;
+    const dur = 900;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setN(Math.round(from + (value - from) * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <>{bn(n)}</>;
+}
+
 type Toast = { kind: 'ok' | 'err'; text: string } | null;
 type ConfirmTarget = { id: string; type: 'donor' | 'request'; name: string } | null;
+
+function Blobs() {
+  return (
+    <>
+      <motion.div
+        animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
+        transition={{ repeat: Infinity, duration: 14, ease: 'easeInOut' }}
+        className="pointer-events-none absolute -left-20 top-10 h-96 w-96 rounded-full bg-red-500/15 blur-3xl"
+      />
+      <motion.div
+        animate={{ x: [0, -50, 0], y: [0, 40, 0] }}
+        transition={{ repeat: Infinity, duration: 18, ease: 'easeInOut' }}
+        className="pointer-events-none absolute right-0 top-1/3 h-[30rem] w-[30rem] rounded-full bg-orange-400/15 blur-3xl"
+      />
+      <motion.div
+        animate={{ x: [0, 30, 0], y: [0, -30, 0] }}
+        transition={{ repeat: Infinity, duration: 16, ease: 'easeInOut' }}
+        className="pointer-events-none absolute bottom-10 left-1/3 h-80 w-80 rounded-full bg-rose-400/10 blur-3xl"
+      />
+    </>
+  );
+}
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'donors' | 'requests' | 'gallery'>('donors');
   const [donors, setDonors] = useState<Donor[]>([]);
@@ -314,22 +367,29 @@ export default function AdminPage() {
   }
 
   const shell =
-    'min-h-screen pt-16 bg-gradient-to-br from-slate-50 via-rose-50/30 to-indigo-50/40 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 text-slate-900 dark:text-slate-100 transition-colors';
+    'min-h-screen pt-16 bg-gradient-to-b from-rose-50 via-white to-orange-50 dark:from-slate-950 dark:via-slate-950 dark:to-red-950/30 text-slate-900 dark:text-slate-100 transition-colors';
 
   // ---------- লগইন ----------
   if (!isAuthenticated) {
     return (
-      <main className={`${shell} flex items-center justify-center p-4`}>
+      <main className={`${shell} relative flex items-center justify-center overflow-hidden p-4`}>
         <Header />
+        <Blobs />
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6"
+          initial={{ opacity: 0, y: 24, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: EASE }}
+          className="relative z-10 bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl border border-rose-100 dark:border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl shadow-red-500/10 space-y-6 overflow-hidden"
         >
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-red-500 via-orange-400 to-red-800" />
           <div className="text-center space-y-2">
-            <div className="inline-flex p-3 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 mb-2">
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+              className="inline-flex p-3.5 rounded-2xl bg-gradient-to-br from-red-500 to-red-800 text-white shadow-lg shadow-red-500/30 mb-2"
+            >
               <Lock className="h-8 w-8" />
-            </div>
+            </motion.div>
             <h1 className="text-2xl font-black leading-[1.4] text-slate-900 dark:text-white">অ্যাডমিন লগইন</h1>
             <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               শুধু অ্যাডমিনের জন্য। পাসওয়ার্ড দিয়ে প্রবেশ করুন।
@@ -341,20 +401,28 @@ export default function AdminPage() {
               <div className="relative">
                 <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPw ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="অ্যাডমিন পাসওয়ার্ড লিখুন..."
-                  className="w-full pl-11 pr-4 py-3 text-sm bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+                  className="w-full pl-11 pr-12 py-3 text-sm bg-orange-50/50 dark:bg-white/5 border-[1.5px] border-orange-100 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/15 transition-all"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  aria-label={showPw ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-white/10"
+                >
+                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
               {passwordError && <p className="text-xs text-rose-500 font-semibold pl-2">{passwordError}</p>}
             </div>
             <button
               type="submit"
               disabled={loggingIn}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 disabled:opacity-60 text-white text-sm font-bold shadow-lg shadow-rose-600/30 transition-all"
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-red-600 via-red-600 to-red-800 hover:brightness-110 hover:scale-[1.02] active:scale-95 disabled:opacity-60 text-white text-sm font-bold shadow-lg shadow-red-600/30 transition-all"
             >
               {loggingIn ? 'যাচাই হচ্ছে...' : 'প্রবেশ করুন'}
             </button>
@@ -365,8 +433,8 @@ export default function AdminPage() {
   }
 
   const statCards = [
-    { label: 'মোট ডোনার', value: donors.length, sub: `${bn(stats.availableDonors)} জন প্রস্তুত`, icon: Users, grad: 'from-rose-500 to-red-600' },
-    { label: 'এই সপ্তাহে নতুন', value: stats.newDonors, sub: 'গত ৭ দিনে যোগ', icon: CalendarPlus, grad: 'from-sky-500 to-blue-600' },
+    { label: 'মোট ডোনার', value: donors.length, sub: `${bn(stats.availableDonors)} জন প্রস্তুত`, icon: Users, grad: 'from-red-500 to-red-800' },
+    { label: 'এই সপ্তাহে নতুন', value: stats.newDonors, sub: 'গত ৭ দিনে যোগ', icon: CalendarPlus, grad: 'from-fuchsia-500 to-rose-700' },
     { label: 'চলমান রিকোয়েস্ট', value: stats.openReq, sub: `মোট ${bn(requests.length)} টি`, icon: Clock, grad: 'from-amber-500 to-orange-600' },
     { label: 'পূরণ হয়েছে', value: stats.fulfilled, sub: 'সফল রক্ত সংগ্রহ', icon: CheckCircle2, grad: 'from-emerald-500 to-green-600' },
   ];
@@ -374,7 +442,7 @@ export default function AdminPage() {
   const chip = (active: boolean) =>
     `shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
       active
-        ? 'bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-600/25'
+        ? 'bg-gradient-to-r from-red-600 to-red-800 border-transparent text-white shadow-md shadow-red-600/25'
         : 'bg-white/80 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-rose-300 dark:hover:border-rose-500/40'
     }`;
 
@@ -382,20 +450,25 @@ export default function AdminPage() {
 
   return (
     <main className={`${shell} relative overflow-hidden`}>
-      <div className="absolute top-10 left-10 w-96 h-96 bg-rose-500/10 dark:bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 right-10 w-[30rem] h-[30rem] bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+      <Blobs />
 
       <Header />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* শিরোনাম */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white/80 dark:bg-white/5 backdrop-blur-2xl p-5 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl">
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE }}
+          className="relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white/85 dark:bg-white/5 backdrop-blur-2xl p-5 sm:p-7 rounded-3xl border border-rose-100 dark:border-white/10 shadow-xl shadow-red-500/5"
+        >
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-red-500 via-orange-400 to-red-800" />
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold">
-              <ShieldCheck className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5" />
               কন্ট্রোল প্যানেল
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black leading-[1.4] text-slate-900 dark:text-white">অ্যাডমিন ড্যাশবোর্ড</h1>
+            <h1 className="text-2xl sm:text-3xl font-black leading-[1.4] bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 bg-clip-text text-transparent">অ্যাডমিন ড্যাশবোর্ড</h1>
             <p className="text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400">
               ডোনার ও রক্তের অনুরোধ এক জায়গা থেকে দেখুন ও পরিচালনা করুন
               {refreshedAt && <span> · সর্বশেষ আপডেট {refreshedAt.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</span>}
@@ -418,25 +491,37 @@ export default function AdminPage() {
               লগআউট
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* পরিসংখ্যান */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {statCards.map((c) => (
-            <div key={c.label} className="relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-md">
-              <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br ${c.grad} opacity-15`} />
+          {statCards.map((c, i) => (
+            <motion.div
+              key={c.label}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.08, duration: 0.5, ease: EASE }}
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-white/85 dark:bg-white/5 border border-rose-100 dark:border-white/10 shadow-md hover:shadow-xl hover:shadow-red-500/10 transition-shadow"
+            >
+              <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br ${c.grad} opacity-20`} />
               <div className={`inline-flex p-2 rounded-xl bg-gradient-to-br ${c.grad} text-white shadow-md`}>
                 <c.icon className="h-4 w-4" />
               </div>
-              <p className="mt-3 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">{loading ? '…' : bn(c.value)}</p>
+              <p className="mt-3 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">{loading ? '…' : <CountUp value={c.value} />}</p>
               <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-0.5">{c.label}</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{c.sub}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* ব্লাড গ্রুপ অনুযায়ী চাহিদা বনাম ডোনার */}
-        <div className="rounded-3xl p-5 sm:p-6 bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-md">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.5, ease: EASE }}
+          className="rounded-3xl p-5 sm:p-6 bg-white/85 dark:bg-white/5 border border-rose-100 dark:border-white/10 shadow-md"
+        >
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h2 className="text-base font-black leading-[1.5] flex items-center gap-2">
               <Droplets className="h-5 w-5 text-rose-600" />
@@ -451,10 +536,12 @@ export default function AdminPage() {
             {stats.perGroup.map((x) => {
               const short = x.need > x.avail;
               return (
-                <button
+                <motion.button
                   key={x.g}
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => setGroupFilter(groupFilter === x.g ? 'all' : x.g)}
-                  className={`text-left rounded-2xl p-3 border transition-all ${
+                  className={`text-left rounded-2xl p-3 border transition-colors ${
                     groupFilter === x.g
                       ? 'border-rose-500 bg-rose-50 dark:bg-rose-500/10'
                       : 'border-slate-200 dark:border-white/10 hover:border-rose-300 dark:hover:border-rose-500/40'
@@ -466,23 +553,33 @@ export default function AdminPage() {
                   </div>
                   <div className="mt-2 space-y-1.5">
                     <div className="h-1.5 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(x.avail / maxBar) * 100}%` }} />
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(x.avail / maxBar) * 100}%` }}
+                        transition={{ duration: 0.9, ease: EASE, delay: 0.4 }}
+                      />
                     </div>
                     <div className="h-1.5 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden">
-                      <div className="h-full bg-rose-500 rounded-full" style={{ width: `${(x.need / maxBar) * 100}%` }} />
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-red-500 to-red-800 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(x.need / maxBar) * 100}%` }}
+                        transition={{ duration: 0.9, ease: EASE, delay: 0.5 }}
+                      />
                     </div>
                   </div>
                   <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
                     {bn(x.avail)} প্রস্তুত · {bn(x.need)} চাহিদা
                   </p>
-                </button>
+                </motion.button>
               );
             })}
           </div>
           <p className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
             ⚠ চিহ্ন মানে ওই গ্রুপে চাহিদা প্রস্তুত ডোনারের চেয়ে বেশি। গ্রুপে চাপ দিলে নিচের তালিকা ফিল্টার হবে।
           </p>
-        </div>
+        </motion.div>
 
         {/* ট্যাব + সার্চ + এক্সপোর্ট */}
         <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
@@ -497,14 +594,21 @@ export default function AdminPage() {
               <button
                 key={t.k}
                 onClick={() => setActiveTab(t.k)}
-                className={`flex-1 lg:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                  activeTab === t.k
-                    ? 'bg-gradient-to-r from-rose-600 to-red-500 text-white shadow-lg shadow-rose-600/30'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
+                className={`relative flex-1 lg:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+                  activeTab === t.k ? 'text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
                 }`}
               >
-                <t.icon className="h-4 w-4" />
-                {t.label}{t.n !== null && ` (${bn(t.n)})`}
+                {activeTab === t.k && (
+                  <motion.span
+                    layoutId="admin-tab-pill"
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-600 to-red-800 shadow-lg shadow-red-600/30"
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <t.icon className="h-4 w-4" />
+                  {t.label}{t.n !== null && ` (${bn(t.n)})`}
+                </span>
               </button>
             ))}
           </div>
@@ -575,7 +679,7 @@ export default function AdminPage() {
         </div>
 
         {/* তালিকা */}
-        <div className="rounded-3xl bg-white/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-xl overflow-hidden">
+        <div className="rounded-3xl bg-white/85 dark:bg-white/5 border border-rose-100 dark:border-white/10 shadow-xl shadow-red-500/5 overflow-hidden">
           {loading ? (
             <div className="text-center py-20">
               <Activity className="h-8 w-8 text-rose-600 animate-spin mx-auto mb-3" />
@@ -585,15 +689,22 @@ export default function AdminPage() {
             filteredDonors.length === 0 ? (
               <div className="p-16 text-center text-slate-500 dark:text-slate-400 text-sm">কোনো ডোনার পাওয়া যায়নি।</div>
             ) : (
-              <ul className="divide-y divide-slate-100 dark:divide-white/5">
-                {filteredDonors.map((d) => (
-                  <li key={d.id} className="p-4 sm:px-6 flex flex-col md:flex-row md:items-center gap-3 md:gap-5 hover:bg-slate-50/70 dark:hover:bg-white/5 transition-colors">
+              <ul key={`d-${groupFilter}-${donorFilter}-${q}`} className="divide-y divide-rose-50 dark:divide-white/5">
+                {filteredDonors.map((d, i) => (
+                  <motion.li
+                    key={d.id}
+                    custom={i}
+                    variants={listItem}
+                    initial="hidden"
+                    animate="show"
+                    className="p-4 sm:px-6 flex flex-col md:flex-row md:items-center gap-3 md:gap-5 hover:bg-gradient-to-r hover:from-rose-50/80 hover:to-transparent dark:hover:from-red-500/10 transition-colors"
+                  >
                     <div className="flex items-center gap-3 md:w-[28%] min-w-0">
                       {d.photo_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={d.photo_url} alt="" className="h-11 w-11 rounded-full object-cover shrink-0 border border-slate-200 dark:border-white/10" />
                       ) : (
-                        <div className="h-11 w-11 rounded-full bg-gradient-to-br from-rose-500 to-red-600 text-white font-bold flex items-center justify-center shrink-0">
+                        <div className="h-11 w-11 rounded-full bg-gradient-to-br from-red-500 to-red-800 text-white font-bold flex items-center justify-center shrink-0">
                           {d.full_name?.charAt(0).toUpperCase() || 'D'}
                         </div>
                       )}
@@ -651,20 +762,27 @@ export default function AdminPage() {
                         মুছুন
                       </button>
                     </div>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
             )
           ) : filteredRequests.length === 0 ? (
             <div className="p-16 text-center text-slate-500 dark:text-slate-400 text-sm">কোনো রিকোয়েস্ট পাওয়া যায়নি।</div>
           ) : (
-            <ul className="divide-y divide-slate-100 dark:divide-white/5">
-              {filteredRequests.map((r) => {
+            <ul key={`r-${groupFilter}-${requestFilter}-${q}`} className="divide-y divide-rose-50 dark:divide-white/5">
+              {filteredRequests.map((r, i) => {
                 const meta = STATUS_META[r.urgency_status] ?? STATUS_META.moderate;
                 return (
-                  <li key={r.id} className="p-4 sm:px-6 flex flex-col md:flex-row md:items-center gap-3 md:gap-5 hover:bg-slate-50/70 dark:hover:bg-white/5 transition-colors">
+                  <motion.li
+                    key={r.id}
+                    custom={i}
+                    variants={listItem}
+                    initial="hidden"
+                    animate="show"
+                    className="p-4 sm:px-6 flex flex-col md:flex-row md:items-center gap-3 md:gap-5 hover:bg-gradient-to-r hover:from-rose-50/80 hover:to-transparent dark:hover:from-red-500/10 transition-colors"
+                  >
                     <div className="flex items-center gap-3 md:w-[26%] min-w-0">
-                      <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white font-black flex items-center justify-center shrink-0 text-sm">
+                      <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-red-500 to-red-800 text-white font-black flex items-center justify-center shrink-0 text-sm">
                         {r.blood_group}
                       </div>
                       <div className="min-w-0">
@@ -729,7 +847,7 @@ export default function AdminPage() {
                         মুছুন
                       </button>
                     </div>
-                  </li>
+                  </motion.li>
                 );
               })}
             </ul>
@@ -777,7 +895,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 text-white text-sm font-bold shadow-lg shadow-rose-600/30"
+                  className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-red-600 to-red-800 hover:brightness-110 text-white text-sm font-bold shadow-lg shadow-red-600/30"
                 >
                   হ্যাঁ, মুছুন
                 </button>

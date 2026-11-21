@@ -1,9 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ArrowRight, AlertCircle } from 'lucide-react';
+import { CheckCircle2, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Header from '@/components/Header';
 import { LogoMark } from '@/components/Logo';
 
@@ -41,6 +42,43 @@ export function Field({
       </div>
       {hint && <p className="ml-1 mt-1 text-xs text-slate-500 dark:text-slate-400">{hint}</p>}
     </div>
+  );
+}
+
+// ===== পাসওয়ার্ড ইনপুট (চোখ আইকনে দেখা/লুকানো) =====
+export function PasswordInput({
+  value,
+  onChange,
+  placeholder,
+  autoComplete,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  autoComplete?: string;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <>
+      <input
+        required
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        className={inputCls + ' pr-12'}
+      />
+      <button
+        type="button"
+        onClick={() => setShow((v) => !v)}
+        aria-label={show ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'}
+        title={show ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'}
+        className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-slate-700"
+      >
+        {show ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+      </button>
+    </>
   );
 }
 

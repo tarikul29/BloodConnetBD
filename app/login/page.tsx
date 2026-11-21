@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Mail, Lock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
-import { AuthShell, Field, FormError, FormHeading, SubmitButton, inputCls } from '@/components/FormUI';
+import { AuthShell, Field, FormError, FormHeading, PasswordInput, SubmitButton, inputCls } from '@/components/FormUI';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -79,13 +79,11 @@ export default function LoginPage() {
         </Field>
 
         <Field label="পাসওয়ার্ড" icon={Lock}>
-          <input
-            required
-            type="password"
+          <PasswordInput
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             placeholder="আপনার পাসওয়ার্ড"
-            className={inputCls}
+            autoComplete="current-password"
           />
         </Field>
 

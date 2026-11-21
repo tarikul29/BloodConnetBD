@@ -6,7 +6,7 @@ import { User, Phone, Mail, MapPin, Camera, Lock, Building, CalendarDays, Drople
 import { createClient } from '@/lib/supabase/client';
 import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
 import { compressImage } from '@/lib/imageCompress';
-import { AuthShell, Field, FormError, FormHeading, Section, SubmitButton, SuccessScreen, inputCls, selectCls } from '@/components/FormUI';
+import { AuthShell, Field, FormError, FormHeading, PasswordInput, Section, SubmitButton, SuccessScreen, inputCls, selectCls } from '@/components/FormUI';
 import type { BloodGroup } from '@/types/database';
 
 const BLOOD_GROUPS: BloodGroup[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -520,13 +520,11 @@ export default function DonorRegisterPage() {
             />
           </Field>
           <Field label="পাসওয়ার্ড" icon={Lock}>
-            <input
-              required
-              type="password"
+            <PasswordInput
               value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              onChange={(v) => setForm({ ...form, password: v })}
               placeholder="অন্তত ৬ অক্ষর"
-              className={inputCls}
+              autoComplete="new-password"
             />
           </Field>
         </Section>

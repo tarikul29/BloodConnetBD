@@ -62,11 +62,11 @@ function timeAgo(iso: string | null): string {
   if (!iso) return '';
   const diff = Date.now() - new Date(iso).getTime();
   const min = Math.floor(diff / 60000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min} min ago`;
+  if (min < 1) return 'এইমাত্র';
+  if (min < 60) return `${min} মিনিট আগে`;
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr} hr ago`;
-  return `${Math.floor(hr / 24)} day ago`;
+  if (hr < 24) return `${hr} ঘণ্টা আগে`;
+  return `${Math.floor(hr / 24)} দিন আগে`;
 }
 
 function formatDistance(km: number) {
@@ -459,10 +459,11 @@ export default function DonorsPage() {
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10 pb-20">
         {!loading && filteredDonors.length > 0 && (
           <div className="mb-6 text-2xl font-extrabold text-slate-900 dark:text-white">
-            Showing{' '}
+            মোট{' '}
             <span className="bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 bg-clip-text text-transparent">
-              {filteredDonors.length} donor{filteredDonors.length === 1 ? '' : 's'}
-            </span>
+              {filteredDonors.length} জন ডোনার
+            </span>{' '}
+            পাওয়া গেছে
           </div>
         )}
 
@@ -611,7 +612,7 @@ export default function DonorsPage() {
                     {donor.distance_km !== null && (
                       <p className="-mt-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
                         {donor.location_source === 'live'
-                          ? `Live location · updated ${timeAgo(donor.location_updated_at)}`
+                          ? `লাইভ লোকেশন · ${timeAgo(donor.location_updated_at)}`
                           : 'Based on registered area'}
                       </p>
                     )}

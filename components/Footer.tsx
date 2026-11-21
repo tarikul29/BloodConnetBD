@@ -16,7 +16,7 @@ const LINKS = [
 const CONTACTS = [
   { icon: Mail, text: 'support: tarikulislam870265@gmail.com', grad: 'from-red-500 to-rose-700' },
   { icon: Phone, text: '+880 1943566544', grad: 'from-amber-400 to-orange-600' },
-  { icon: MapPin, text: 'kishoreganj, bangladesh', grad: 'from-emerald-500 to-teal-700' },
+  { icon: MapPin, text: 'কিশোরগঞ্জ, বাংলাদেশ', grad: 'from-emerald-500 to-teal-700' },
 ];
 
 const fade = {
