@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '', priority: 1, freq: 'daily' },
     { path: '/donors', priority: 0.9, freq: 'daily' },
     { path: '/requests', priority: 0.9, freq: 'hourly' },
+    { path: '/emergency', priority: 0.6, freq: 'monthly' },
     { path: '/request-blood', priority: 0.8, freq: 'monthly' },
     { path: '/register', priority: 0.8, freq: 'monthly' },
     { path: '/login', priority: 0.3, freq: 'yearly' },

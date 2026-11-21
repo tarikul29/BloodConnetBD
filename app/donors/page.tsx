@@ -30,7 +30,7 @@ import type { BloodGroup } from '@/types/database';
 interface DonorWithDistance {
   id: string;
   full_name: string;
-  phone: string;
+  phone?: string; // সার্ভার থেকে ‘কল’ চাপলে আলাদা আসে
   blood_group: BloodGroup;
   address: string | null;
   last_donation_date: string | null;
@@ -83,6 +83,9 @@ export default function DonorsPage() {
   const [sortedByDistance, setSortedByDistance] = useState(false);
   const [revealedId, setRevealedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [phones, setPhones] = useState<Record<string, string>>({});
+  const [phoneLoadingId, setPhoneLoadingId] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<{ id: string; msg: string } | null>(null);
   const locateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -154,9 +157,37 @@ export default function DonorsPage() {
     fetchDonors(null);
   }
 
+  async function revealPhone(id: string) {
+    if (phones[id]) {
+      setRevealedId(id);
+      return;
+    }
+    setPhoneLoadingId(id);
+    setPhoneError(null);
+    try {
+      const res = await fetch('/api/donor-phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.phone) {
+        setPhones((p) => ({ ...p, [id]: json.phone }));
+        setRevealedId(id);
+      } else if (res.status === 429) {
+        setPhoneError({ id, msg: 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।' });
+      } else {
+        setPhoneError({ id, msg: 'নম্বর আনা যায়নি। আবার চেষ্টা করুন।' });
+      }
+    } catch {
+      setPhoneError({ id, msg: 'ইন্টারনেট সংযোগ চেক করুন।' });
+    }
+    setPhoneLoadingId(null);
+  }
+
   async function copyNumber(d: DonorWithDistance) {
     try {
-      await navigator.clipboard.writeText(d.phone);
+      await navigator.clipboard.writeText(phones[d.id] ?? '');
       setCopiedId(d.id);
       setTimeout(() => setCopiedId((c) => (c === d.id ? null : c)), 1800);
     } catch {
@@ -178,8 +209,7 @@ export default function DonorsPage() {
       const matchesGroup = selectedGroup === 'ALL' || donor.blood_group === selectedGroup;
       const matchesSearch =
         donor.full_name?.toLowerCase().includes(q) ||
-        donor.address?.toLowerCase().includes(q) ||
-        donor.phone?.includes(searchQuery);
+        donor.address?.toLowerCase().includes(q);
       return matchesGroup && matchesSearch;
     });
     // প্রস্তুত ডোনার আগে, বাকিদের ক্রম আগের মতোই থাকে
@@ -366,7 +396,7 @@ export default function DonorsPage() {
               <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-red-600" />
               <input
                 type="text"
-                placeholder="Search by name, location, or phone..."
+                placeholder="Search by name or location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-2xl border-[1.5px] border-orange-100 dark:border-slate-700 bg-white dark:bg-slate-800 py-4 pl-14 pr-5 text-base font-medium text-slate-900 dark:text-white placeholder:text-slate-400 transition-all focus:border-red-500 focus:outline-none focus:ring-4 focus:ring-red-500/15"
@@ -632,7 +662,7 @@ export default function DonorsPage() {
                             <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-950/60 dark:to-teal-950/40 px-4 py-3">
                               <span className="flex flex-col">
                                 <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">Phone number</span>
-                                <b className="text-xl tracking-wide text-emerald-950 dark:text-emerald-200">{donor.phone}</b>
+                                <b className="text-xl tracking-wide text-emerald-950 dark:text-emerald-200">{phones[donor.id]}</b>
                               </span>
                               <button
                                 onClick={() => copyNumber(donor)}
@@ -644,7 +674,7 @@ export default function DonorsPage() {
                             </div>
                             <div className="grid grid-cols-[1.3fr_1fr] gap-2.5">
                               <motion.a
-                                href={`tel:${donor.phone}`}
+                                href={`tel:${phones[donor.id]}`}
                                 whileHover={{ y: -3 }}
                                 whileTap={{ scale: 0.96 }}
                                 className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-red-500 via-red-600 to-red-800 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-red-300/40 dark:shadow-none"
@@ -652,7 +682,7 @@ export default function DonorsPage() {
                                 <Phone className="h-4 w-4" /> Dial now
                               </motion.a>
                               <motion.a
-                                href={`sms:${donor.phone}`}
+                                href={`sms:${phones[donor.id]}`}
                                 whileHover={{ y: -3 }}
                                 whileTap={{ scale: 0.96 }}
                                 className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-100 to-orange-200 dark:from-slate-800 dark:to-slate-700 py-3.5 text-sm font-extrabold text-amber-900 dark:text-amber-300"
@@ -664,7 +694,8 @@ export default function DonorsPage() {
                         ) : (
                           <motion.button
                             key="call"
-                            onClick={() => setRevealedId(donor.id)}
+                            onClick={() => revealPhone(donor.id)}
+                            disabled={phoneLoadingId === donor.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
@@ -679,10 +710,13 @@ export default function DonorsPage() {
                               className="pointer-events-none absolute inset-y-0 w-1/3 -skew-x-[20deg] bg-gradient-to-r from-transparent via-white/60 to-transparent"
                             />
                             <Phone className="relative h-[18px] w-[18px]" />
-                            <span className="relative">Call Now</span>
+                            <span className="relative">{phoneLoadingId === donor.id ? 'লোড হচ্ছে...' : 'Call Now'}</span>
                           </motion.button>
                         )}
                       </AnimatePresence>
+                      {phoneError?.id === donor.id && !revealed && (
+                        <p className="mt-2 text-center text-[11px] font-semibold text-rose-600">{phoneError.msg}</p>
+                      )}
                     </div>
                   </div>
                 </motion.div>

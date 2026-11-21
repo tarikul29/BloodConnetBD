@@ -207,8 +207,8 @@ export default function DashboardPage() {
             transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
             className="absolute -right-10 -top-16 h-56 w-56 rounded-full bg-yellow-300/40 blur-3xl"
           />
-          <div className="relative flex flex-wrap items-center gap-5">
-            <label htmlFor="photo" className="group cursor-pointer">
+          <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">
+            <label htmlFor="photo" className="group shrink-0 cursor-pointer">
               <div className="relative h-28 w-28">
                 <motion.span
                   aria-hidden
@@ -235,10 +235,10 @@ export default function DashboardPage() {
             </label>
             <input id="photo" type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
 
-            <div className="min-w-0 flex-1">
+            <div className="w-full min-w-0 sm:flex-1">
               <p className="text-xs font-bold uppercase tracking-wider text-yellow-200">আমার প্রোফাইল</p>
-              <h1 className="mt-1 break-words text-2xl font-extrabold leading-[1.4] sm:text-3xl">{donor.full_name}</h1>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <h1 className="mt-1 [overflow-wrap:anywhere] text-2xl font-extrabold leading-[1.4] sm:text-3xl">{donor.full_name}</h1>
+              <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-sm font-extrabold text-red-700">
                   <Droplet className="h-3.5 w-3.5" fill="currentColor" /> {donor.blood_group}
                 </span>
@@ -270,7 +270,7 @@ export default function DashboardPage() {
 
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 self-start rounded-full bg-white/20 px-4 py-2 text-sm font-bold text-white backdrop-blur-md transition-colors hover:bg-white/35"
+              className="order-first inline-flex items-center gap-1.5 self-end rounded-full bg-white/20 px-4 py-2 sm:order-none sm:self-start text-sm font-bold text-white backdrop-blur-md transition-colors hover:bg-white/35"
             >
               <LogOut className="h-4 w-4" />
               লগ আউট

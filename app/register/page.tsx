@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Phone, Mail, MapPin, Camera, Lock, Building, CalendarDays, Droplet } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Camera, Lock, Building, CalendarDays, Droplet, ShieldCheck, XCircle, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
 import { compressImage } from '@/lib/imageCompress';
@@ -233,7 +233,83 @@ const BD_LOCATIONS: Record<string, Record<string, string[]>> = {
   },
 };
 
+type YesNo = 'yes' | 'no' | null;
+
+// রেজিস্ট্রেশনের আগে সংক্ষিপ্ত যোগ্যতা যাচাই
+function EligibilityQuiz({ onPass }: { onPass: () => void }) {
+  const [age, setAge] = useState<YesNo>(null);
+  const [weight, setWeight] = useState<YesNo>(null);
+  const [recent, setRecent] = useState<YesNo>(null);
+
+  const blocked = age === 'no' || weight === 'no';
+  const done = age === 'yes' && weight === 'yes' && recent !== null;
+
+  const questions: { label: string; hint: string; value: YesNo; set: (v: YesNo) => void }[] = [
+    { label: 'আপনার বয়স কি ১৮ থেকে ৬০ বছরের মধ্যে?', hint: 'রক্তদানের নিরাপদ বয়সসীমা', value: age, set: setAge },
+    { label: 'আপনার ওজন কি ৫০ কেজি বা তার বেশি?', hint: 'কম ওজনে রক্তদান ঝুঁকিপূর্ণ', value: weight, set: setWeight },
+    { label: 'গত ৪ মাসের মধ্যে কি রক্ত দিয়েছেন?', hint: 'দিয়ে থাকলেও রেজিস্টার করা যাবে — পরের তারিখ নিজে থেকে গোনা হবে', value: recent, set: setRecent },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-4 rounded-3xl border border-rose-200/70 bg-gradient-to-br from-rose-50 to-orange-50 p-5 dark:border-red-900/40 dark:from-red-950/30 dark:to-slate-900 sm:p-6"
+    >
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-800 text-white shadow-lg shadow-red-500/30">
+          <ShieldCheck className="h-5 w-5" />
+        </span>
+        <div>
+          <h2 className="text-lg font-extrabold leading-[1.5] text-slate-900 dark:text-white">আগে যোগ্যতা যাচাই করুন</h2>
+          <p className="text-xs text-slate-600 dark:text-slate-400">৩টি ছোট প্রশ্ন, মাত্র ১০ সেকেন্ড</p>
+        </div>
+      </div>
+
+      {questions.map((q) => (
+        <div key={q.label} className="rounded-2xl bg-white/80 p-4 dark:bg-slate-800/60">
+          <p className="text-[15px] font-bold leading-[1.6] text-slate-900 dark:text-white">{q.label}</p>
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">{q.hint}</p>
+          <div className="grid grid-cols-2 gap-2">
+            {(['yes', 'no'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => q.set(v)}
+                className={`rounded-xl border-[1.5px] py-2.5 text-sm font-bold transition-all ${
+                  q.value === v
+                    ? 'border-red-600 bg-gradient-to-r from-red-600 to-red-800 text-white shadow-md shadow-red-500/25'
+                    : 'border-orange-100 bg-white text-slate-700 hover:border-red-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                }`}
+              >
+                {v === 'yes' ? 'হ্যাঁ' : 'না'}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {blocked && (
+        <div className="flex items-start gap-2.5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium leading-[1.7] text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+          <XCircle className="mt-1 h-4 w-4 shrink-0" />
+          <span>দুঃখিত, বয়স ১৮–৬০ ও ওজন ৫০ কেজি বা বেশি না হলে এখন ডোনার হিসেবে যুক্ত হওয়া যাবে না। শর্ত পূরণ হলে আবার আসবেন — আপনার ইচ্ছাটাই অনেক বড় কথা।</span>
+        </div>
+      )}
+
+      <button
+        type="button"
+        disabled={!done}
+        onClick={onPass}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-red-600 to-red-800 py-3.5 text-base font-extrabold text-white shadow-lg shadow-red-500/30 transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        আমি যোগ্য, এগিয়ে যাই <ArrowRight className="h-4 w-4" />
+      </button>
+    </motion.div>
+  );
+}
+
 export default function DonorRegisterPage() {
+  const [eligibleOk, setEligibleOk] = useState(false);
   const [form, setForm] = useState({
     full_name: '',
     phone: '',
@@ -455,6 +531,9 @@ export default function DonorRegisterPage() {
         ))}
       </div>
 
+      {!eligibleOk ? (
+        <EligibilityQuiz onPass={() => setEligibleOk(true)} />
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* ছবি */}
         <div className="flex items-center gap-5">
@@ -673,6 +752,7 @@ export default function DonorRegisterPage() {
           </a>
         </p>
       </form>
+      )}
     </AuthShell>
   );
 }

@@ -11,6 +11,7 @@ const LINKS = [
   { href: '/register', label: 'ডোনার হন' },
   { href: '/requests', label: 'চলমান রিকোয়েস্ট' },
   { href: '/request-blood', label: 'রক্তের অনুরোধ করুন' },
+  { href: '/emergency', label: 'জরুরি হটলাইন' },
 ];
 
 const CONTACTS = [
