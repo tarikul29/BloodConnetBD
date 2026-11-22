@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import webpush from 'web-push';
+import { setupWebPush, sendToSubs, type PushSub } from '@/lib/push';
 import { haversineDistance } from '@/lib/geo';
 import { checkDonorEligibility } from '@/lib/eligibility';
 import { donorGroupsFor } from '@/lib/bloodCompat';
@@ -8,11 +8,15 @@ const RADIUS_KM = Number(process.env.NOTIFY_RADIUS_KM || 50); // এই দূ�
 const MAX_RECIPIENTS = 300;
 
 /** নতুন রিকোয়েস্টের জন্য কাছের, মানানসই ও প্রস্তুত ডোনারদের পুশ নোটিফিকেশন পাঠায়। */
-export async function notifyDonors(supabase: SupabaseClient, requestId: string): Promise<{ sent: number; donors: number }> {
-  const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const priv = process.env.VAPID_PRIVATE_KEY;
-  if (!pub || !priv) return { sent: 0, donors: 0 };
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@bloodconnect.bd', pub, priv);
+export async function notifyDonors(
+  supabase: SupabaseClient,
+  requestId: string
+): Promise<{ sent: number; donors: number; subs: number; reason?: string }> {
+  const setup = setupWebPush();
+  if (!setup.ok) {
+    console.error('[notify] push setup failed:', setup.reason);
+    return { sent: 0, donors: 0, subs: 0, reason: setup.reason };
+  }
 
   // একটি রিকোয়েস্টের জন্য একবারই: notified_at ফাঁকা থাকলেই দাবি করা যাবে
   const { data: claimed, error: claimErr } = await supabase
@@ -22,7 +26,11 @@ export async function notifyDonors(supabase: SupabaseClient, requestId: string):
     .is('notified_at', null)
     .in('urgency_status', ['critical', 'urgent', 'moderate'])
     .select('id, blood_group, hospital_name, bags_needed, latitude, longitude, urgency_status');
-  if (claimErr || !claimed || claimed.length === 0) return { sent: 0, donors: 0 };
+  if (claimErr) {
+    console.error('[notify] claim error:', claimErr.message);
+    return { sent: 0, donors: 0, subs: 0, reason: `claim_error: ${claimErr.message}` };
+  }
+  if (!claimed || claimed.length === 0) return { sent: 0, donors: 0, subs: 0, reason: 'already_notified_or_closed' };
   const request = claimed[0];
 
   const { data: donors } = await supabase
@@ -44,7 +52,7 @@ export async function notifyDonors(supabase: SupabaseClient, requestId: string):
     .sort((a, b) => a.km - b.km)
     .slice(0, MAX_RECIPIENTS);
 
-  if (targets.length === 0) return { sent: 0, donors: 0 };
+  if (targets.length === 0) return { sent: 0, donors: 0, subs: 0, reason: 'no_matching_donors' };
 
   const kmById = new Map(targets.map((t) => [t.id, t.km]));
   const { data: subs } = await supabase
@@ -52,35 +60,20 @@ export async function notifyDonors(supabase: SupabaseClient, requestId: string):
     .select('id, user_id, endpoint, p256dh, auth')
     .in('user_id', targets.map((t) => t.id));
 
+  const list = (subs ?? []) as (PushSub & { user_id: string })[];
+  if (list.length === 0) return { sent: 0, donors: targets.length, subs: 0, reason: 'no_push_subscriptions' };
+
   const urgent = request.urgency_status === 'critical' ? 'অতি জরুরি' : 'জরুরি';
-  let sent = 0;
-  const dead: string[] = [];
-  const list = subs ?? [];
+  const report = await sendToSubs(supabase, list, (s) => {
+    const km = kmById.get((s as PushSub & { user_id: string }).user_id) ?? 0;
+    return {
+      title: `${urgent}: ${request.blood_group} রক্ত দরকার`,
+      body: `${request.hospital_name} • ${request.bags_needed} ব্যাগ • আপনার থেকে প্রায় ${Math.max(1, Math.round(km))} কিমি`,
+      url: '/requests',
+      tag: `req-${request.id}`,
+    };
+  });
 
-  for (let i = 0; i < list.length; i += 20) {
-    await Promise.all(
-      list.slice(i, i + 20).map(async (s) => {
-        const km = kmById.get(s.user_id) ?? 0;
-        const payload = JSON.stringify({
-          title: `${urgent}: ${request.blood_group} রক্ত দরকার`,
-          body: `${request.hospital_name} • ${request.bags_needed} ব্যাগ • আপনার থেকে প্রায় ${Math.max(1, Math.round(km))} কিমি`,
-          url: '/requests',
-          tag: `req-${request.id}`,
-        });
-        try {
-          await webpush.sendNotification(
-            { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-            payload,
-            { TTL: 60 * 60 * 6, urgency: 'high' }
-          );
-          sent += 1;
-        } catch (err: any) {
-          if (err?.statusCode === 404 || err?.statusCode === 410) dead.push(s.id);
-        }
-      })
-    );
-  }
-
-  if (dead.length) await supabase.from('push_subscriptions').delete().in('id', dead);
-  return { sent, donors: targets.length };
+  console.log('[notify]', JSON.stringify({ request: request.id, donors: targets.length, subs: list.length, sent: report.sent, dead: report.dead, failed: report.failed.length }));
+  return { sent: report.sent, donors: targets.length, subs: list.length };
 }

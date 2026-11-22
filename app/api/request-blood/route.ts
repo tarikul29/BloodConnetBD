@@ -91,7 +91,9 @@ export async function POST(req: NextRequest) {
   // কাছের ডোনারদের নোটিফিকেশন (ব্যর্থ হলেও রিকোয়েস্ট জমা থাকবে)
   try {
     await notifyDonors(supabase, data.id);
-  } catch {}
+  } catch (e) {
+    console.error('[notify] crashed:', e);
+  }
 
   return NextResponse.json({ ok: true, id: data.id });
 }

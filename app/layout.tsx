@@ -49,8 +49,15 @@ export const metadata: Metadata = {
     title: 'BloodConnect',
     statusBarStyle: 'default' as const,
   },
+  // Google-এর নিয়ম: ফেভিকনের সাইজ ৪৮px-এর গুণিতক (৪৮, ৯৬, ১৯২...) ও পরিষ্কার ঘোষণা
   icons: {
-    icon: '/icon-192.png',
+    icon: [
+      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    shortcut: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
 };
