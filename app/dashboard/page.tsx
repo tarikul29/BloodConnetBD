@@ -35,11 +35,14 @@ export default function DashboardPage() {
 
       const { data } = await supabase
         .from('donors')
-        .select('id, full_name, phone, blood_group, address, last_donation_date, is_available, photo_url, created_at')
+        .select('id, full_name, blood_group, address, last_donation_date, is_available, photo_url, created_at')
         .eq('id', user.id)
         .single();
 
-      setDonor(data ? ({ ...data, email: user.email ?? null } as Donor) : null);
+      // ফোন নম্বর সবার জন্য খোলা কলামে নেই; শুধু নিজের নম্বর আলাদা ফাংশন দিয়ে আসে
+      const { data: myPhone } = await supabase.rpc('get_my_phone');
+
+      setDonor(data ? ({ ...data, phone: (myPhone as string) ?? '', email: user.email ?? null } as Donor) : null);
       setLoading(false);
     }
     loadDonor();
