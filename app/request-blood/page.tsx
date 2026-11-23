@@ -6,6 +6,7 @@ import { Droplet, MapPin, Phone, Building2, User, FileText, Minus, Plus } from '
 import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
 import { AuthShell, Field, FormError, FormHeading, Section, SubmitButton, SuccessScreen, inputCls } from '@/components/FormUI';
 import type { BloodGroup } from '@/types/database';
+import { saveMyRequest } from '@/lib/myRequests';
 
 const BLOOD_GROUPS: BloodGroup[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -143,6 +144,11 @@ export default function RequestBloodPage() {
       }
       return;
     }
+
+    try {
+      const j = await res.json();
+      if (j?.id && j?.token) saveMyRequest(j.id, j.token);
+    } catch {}
 
     setSuccess(true);
   }

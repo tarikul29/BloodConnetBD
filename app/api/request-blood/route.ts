@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { randomBytes, createHash } from 'crypto';
 import { verifyTurnstile } from '@/lib/turnstile';
 import { isRateLimited } from '@/lib/rateLimit';
 import { notifyDonors } from '@/lib/notifyDonors';
@@ -68,6 +69,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'rate' }, { status: 429 });
   }
 
+  // শুধু অনুরোধকারীর কাছে থাকবে — এই টোকেন দিয়েই পরে "পেয়ে গেছি" চিহ্নিত করা যাবে
+  const token = randomBytes(24).toString('hex');
+  const manage_token_hash = createHash('sha256').update(token).digest('hex');
+
   const { data, error } = await supabase
     .from('blood_requests')
     .insert({
@@ -80,6 +85,7 @@ export async function POST(req: NextRequest) {
       contact_phone,
       urgency_status: 'critical',
       patient_notes,
+      manage_token_hash,
     })
     .select('id')
     .single();
@@ -95,5 +101,5 @@ export async function POST(req: NextRequest) {
     console.error('[notify] crashed:', e);
   }
 
-  return NextResponse.json({ ok: true, id: data.id });
+  return NextResponse.json({ ok: true, id: data.id, token });
 }

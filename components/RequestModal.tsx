@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X, Droplet, MapPin, Phone, Building2, User } from 'lucide-react';
 import Turnstile, { TURNSTILE_SITE_KEY } from '@/components/Turnstile';
 import type { BloodGroup } from '@/types/database';
+import { saveMyRequest } from '@/lib/myRequests';
 
 const BLOOD_GROUPS: BloodGroup[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -97,6 +98,11 @@ export default function RequestModal({ isOpen, onClose, onSuccess }: RequestModa
       else setError('Something went wrong. Please try again.');
       return;
     }
+
+    try {
+      const j = await res.json();
+      if (j?.id && j?.token) saveMyRequest(j.id, j.token);
+    } catch {}
 
     onSuccess?.();
     onClose();

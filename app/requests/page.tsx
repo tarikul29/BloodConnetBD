@@ -23,6 +23,7 @@ import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import { CountUp } from '@/components/Hero';
 import type { BloodGroup, BloodRequest } from '@/types/database';
+import { getMyRequestToken } from '@/lib/myRequests';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 const BLOOD_GROUPS: (BloodGroup | 'ALL')[] = ['ALL', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -353,6 +354,10 @@ export default function RequestsPage() {
 
 function RequestCard({ request, onUpdate }: { request: BloodRequest; onUpdate: () => void }) {
   const [marking, setMarking] = useState(false);
+  const [isMine, setIsMine] = useState(false);
+  useEffect(() => {
+    setIsMine(!!getMyRequestToken(request.id));
+  }, [request.id]);
   const [copied, setCopied] = useState(false);
   const timeAgo = getTimeAgo(request.created_at);
   const style = GROUP_STYLE[request.blood_group] ?? GROUP_STYLE['A+'];
@@ -360,9 +365,16 @@ function RequestCard({ request, onUpdate }: { request: BloodRequest; onUpdate: (
   const bags = Math.max(1, request.bags_needed || 1);
 
   async function handleMarkFulfilled() {
+    const token = getMyRequestToken(request.id);
+    if (!token) return;
     setMarking(true);
-    const supabase = createClient();
-    await supabase.from('blood_requests').update({ urgency_status: 'fulfilled' }).eq('id', request.id);
+    try {
+      await fetch('/api/request-fulfill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: request.id, token }),
+      });
+    } catch {}
     setMarking(false);
     onUpdate();
   }
@@ -509,6 +521,7 @@ function RequestCard({ request, onUpdate }: { request: BloodRequest; onUpdate: (
             </button>
           </div>
 
+          {isMine && (
           <motion.button
             onClick={handleMarkFulfilled}
             disabled={marking}
@@ -519,6 +532,7 @@ function RequestCard({ request, onUpdate }: { request: BloodRequest; onUpdate: (
             <CheckCircle2 className="h-4 w-4" />
             {marking ? 'আপডেট হচ্ছে...' : 'রক্ত পেয়ে গেছি ✓'}
           </motion.button>
+          )}
         </div>
       </div>
     </motion.div>
