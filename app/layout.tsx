@@ -2,6 +2,7 @@ import './globals.css';
 import { ThemeProvider } from 'next-themes';
 import type { Metadata } from 'next';
 import RealtimeNotification from '@/components/RealtimeNotification';
+import TranslateGuard from '@/components/TranslateGuard';
 import { SITE_URL, SITE_NAME, SITE_NAME_BN, SITE_DESCRIPTION } from '@/lib/site';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -111,6 +112,7 @@ export default function RootLayout({
         style={{ fontFamily: "'Hind Siliguri', system-ui, -apple-system, 'Segoe UI', sans-serif" }}
         className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TranslateGuard />
           {children}
           <RealtimeNotification />
         </ThemeProvider>
